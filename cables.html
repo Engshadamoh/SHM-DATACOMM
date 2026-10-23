@@ -2,350 +2,48 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Network Cables Simulation</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔌</text></svg>">
     <style>
-        :root {
-            --primary: #1e3a8a;
-            --secondary: #3b82f6;
-            --bg-color: #f0f4f8;
-            --text-color: #333;
-            --correct: #166534;
-            --wrong: #991b1b;
+        * {
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
         }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .header {
-            background-color: var(--primary);
-            color: white;
-            width: 100%;
-            padding: 20px 0;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-        }
-        .header h1 { margin: 0; font-size: 32px; }
-        .header h2 { margin: 8px 0 0 0; font-size: 20px; font-weight: 300; color: #bfdbfe; }
-        .header p { margin: 5px 0 0 0; font-size: 16px; opacity: 0.9; }
-
-        .container {
-            max-width: 900px;
-            width: 95%;
-            margin: 30px auto;
-        }
-
-        .scenario {
-            background: white;
-            border-radius: 16px;
-            padding: 0;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-            display: none;
-            overflow: hidden;
-            animation: fadeIn 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-        .scenario.active { display: flex; flex-direction: column; width: 100%; }
-
-        @media(min-width: 768px) {
-            .scenario.active { flex-direction: row; }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(30px) scale(0.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .visual-panel {
-            padding: 40px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            flex: 1;
-            border-bottom: 2px solid #e2e8f0;
-        }
-        @media(min-width: 768px) {
-            .visual-panel { border-bottom: none; border-right: 2px solid #e2e8f0; }
-        }
-
-        .content-panel {
-            padding: 30px;
-            flex: 1.5;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .scenario-title {
-            margin-top: 0;
-            color: var(--primary);
-            font-size: 24px;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 10px;
-        }
-
-        .details {
-            background: #f8fafc;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 5px solid var(--secondary);
-            margin: 15px 0;
-            font-size: 16px;
-            line-height: 1.6;
-        }
-
-        .ar { color: #64748b; font-size: 14px; margin-left: 5px; }
-
-        .options-container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 12px;
-            margin-top: 20px;
-        }
-
-        .cable-btn {
-            background: #f1f5f9;
-            border: 2px solid #cbd5e1;
-            padding: 12px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            color: #334155;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            text-align: left;
-        }
-        .cable-btn:hover:not(:disabled) {
-            background: #e2e8f0;
-            border-color: #94a3b8;
-            transform: translateX(5px);
-        }
-        .cable-icon { font-size: 24px; margin-right: 15px; }
-
-        .feedback {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            display: none;
-            animation: fadeIn 0.4s;
-        }
-        .feedback.correct {
-            background: #dcfce7; color: var(--correct); border: 1px solid #bbf7d0; display: block;
-        }
-        .feedback.wrong {
-            background: #fee2e2; color: var(--wrong); border: 1px solid #fecaca; display: block;
-        }
-
-        .next-btn, .restart-btn {
-            margin-top: 25px;
-            background: var(--secondary);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            display: none;
-            align-self: flex-start;
-            transition: background 0.3s, transform 0.2s;
-        }
-        .next-btn:hover, .restart-btn:hover { background: #2563eb; transform: scale(1.05); }
-
-        .animated-svg { width: 180px; height: 180px; }
     </style>
-</head>
-<body>
-
-    <div class="header">
-        <h1>Communication and Network</h1>
-        <h2>Lecturer: Shada Mohammed</h2>
-        <p>Cable Selection Interactive Simulation <span class="ar">(محاكاة اختيار الكيبلات)</span></p>
-    </div>
-
-    <div class="container">
-        
-        <!-- SCENARIO 1 -->
-        <div id="scenario1" class="scenario active">
-            <div class="visual-panel" style="background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);">
-                <!-- Factory SVG -->
-                <svg class="animated-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="20" y="100" width="160" height="80" fill="#64748b"/>
-                    <rect x="40" y="50" width="30" height="50" fill="#475569"/>
-                    <rect x="90" y="30" width="30" height="70" fill="#475569"/>
-                    <rect x="140" y="60" width="30" height="40" fill="#475569"/>
-                    <rect x="30" y="120" width="20" height="20" fill="#cbd5e1"/>
-                    <rect x="70" y="120" width="20" height="20" fill="#cbd5e1"/>
-                    <rect x="110" y="120" width="20" height="20" fill="#cbd5e1"/>
-                    <rect x="150" y="120" width="20" height="20" fill="#cbd5e1"/>
-                </svg>
-                <h3 style="color: #1e3a8a; margin-top: 15px;">Industrial Factory</h3>
-                <span class="ar" style="font-weight:bold;">(مصنع صناعي)</span>
-            </div>
-            
-            <div class="content-panel">
-                <h2 class="scenario-title">Scenario 1 <span class="ar">(سيناريو 1)</span></h2>
-                <div class="details">
-                    <p><strong>Environment <span class="ar">(البيئة)</span>:</strong> High Electromagnetic Interference (EMI) <span class="ar">(تداخل كهرومغناطيسي عالي)</span>.</p>
-                    <p><strong>Distance <span class="ar">(المسافة)</span>:</strong> 150 meters <span class="ar">(150 متر)</span>.</p>
-                    <p><strong>Speed <span class="ar">(السرعة)</span>:</strong> 1 Gbps to 10 Gbps.</p>
-                </div>
-                
-                <h3>Choose the best cable <span class="ar">(اختر أفضل كيبل)</span>:</h3>
-                <div class="options-container" id="options1">
-                    <button class="cable-btn" onclick="checkAnswer(1, false, 'Cat 6 is unshielded and max distance for 10Gbps is 55m. <span class=\'ar\'>(Cat 6 غير محمي وأقصى مسافة لسرعة 10Gbps هي 55 متر)</span>')">
-                        <span class="cable-icon">📶</span> Cat 6 Unshielded
-                    </button>
-                    <button class="cable-btn" onclick="checkAnswer(1, true, 'Excellent! Fiber Optic is not affected by EMI and supports long distances. <span class=\'ar\'>(ممتاز! الألياف الضوئية لا تأثر بالتداخل الكهرومغناطيسي وتدعم المسافات الطويلة)</span>')">
-                        <span class="cable-icon">💡</span> Fiber Optic
-                    </button>
-                    <button class="cable-btn" onclick="checkAnswer(1, false, 'Cat 8 max distance is only 30m. <span class=\'ar\'>(أقصى مسافة لـ Cat 8 هي 30 متر فقط)</span>')">
-                        <span class="cable-icon">🔌</span> Cat 8
-                    </button>
-                </div>
-                
-                <div id="feedback1" class="feedback"></div>
-                <button id="next1" class="next-btn" onclick="nextScenario(2)">Next Scenario <span class="ar">(السيناريو التالي)</span> &rarr;</button>
-            </div>
-        </div>
-
-        <!-- SCENARIO 2 -->
-        <div id="scenario2" class="scenario">
-            <div class="visual-panel" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);">
-                <!-- Office SVG -->
-                <svg class="animated-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="50" y="40" width="100" height="150" fill="#3b82f6" rx="10"/>
-                    <rect x="65" y="60" width="25" height="20" fill="#ffffff"/>
-                    <rect x="110" y="60" width="25" height="20" fill="#ffffff"/>
-                    <rect x="65" y="100" width="25" height="20" fill="#ffffff"/>
-                    <rect x="110" y="100" width="25" height="20" fill="#ffffff"/>
-                    <rect x="65" y="140" width="25" height="20" fill="#ffffff"/>
-                    <rect x="110" y="140" width="25" height="20" fill="#ffffff"/>
-                    <rect x="85" y="170" width="30" height="20" fill="#1e3a8a"/>
-                </svg>
-                <h3 style="color: #166534; margin-top: 15px;">Office Building</h3>
-                <span class="ar" style="font-weight:bold; color: #166534;">(مبنى مكاتب)</span>
-            </div>
-            
-            <div class="content-panel">
-                <h2 class="scenario-title">Scenario 2 <span class="ar">(سيناريو 2)</span></h2>
-                <div class="details">
-                    <p><strong>Environment <span class="ar">(البيئة)</span>:</strong> Moderate EMI (Electrical wiring nearby) <span class="ar">(تداخل كهرومغناطيسي متوسط، تمديدات كهربائية قريبة)</span>.</p>
-                    <p><strong>Distance <span class="ar">(المسافة)</span>:</strong> 70 meters <span class="ar">(70 متر)</span>.</p>
-                    <p><strong>Speed <span class="ar">(السرعة)</span>:</strong> 10 Gbps.</p>
-                </div>
-                
-                <h3>Choose the best cable <span class="ar">(اختر أفضل كيبل)</span>:</h3>
-                <div class="options-container" id="options2">
-                    <button class="cable-btn" onclick="checkAnswer(2, false, 'Cat 5e only supports up to 1 Gbps. <span class=\'ar\'>(Cat 5e يدعم حتى 1 Gbps فقط)</span>')">
-                        <span class="cable-icon">🔌</span> Cat 5e
-                    </button>
-                    <button class="cable-btn" onclick="checkAnswer(2, false, 'Cat 6 (Unshielded) will be affected by EMI over this distance. <span class=\'ar\'>(Cat 6 غير المحمي سيتأثر بالتداخل عبر هذه المسافة)</span>')">
-                        <span class="cable-icon">📶</span> Cat 6 Unshielded
-                    </button>
-                    <button class="cable-btn" onclick="checkAnswer(2, true, 'Correct! Shielded cables protect against moderate EMI and support 10Gbps up to 100m. <span class=\'ar\'>(صحيح! الكيبلات المحمية تحمي من التداخل وتدعم 10Gbps حتى 100 متر)</span>')">
-                        <span class="cable-icon">🛡️</span> Shielded (Cat 6a/7)
-                    </button>
-                </div>
-                
-                <div id="feedback2" class="feedback"></div>
-                <button id="next2" class="next-btn" onclick="nextScenario(3)">Next Scenario <span class="ar">(السيناريو التالي)</span> &rarr;</button>
-            </div>
-        </div>
-
-        <!-- SCENARIO 3 -->
-        <div id="scenario3" class="scenario">
-            <div class="visual-panel" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
-                <!-- Data Center SVG -->
-                <svg class="animated-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="40" y="30" width="50" height="150" fill="#334155" rx="5"/>
-                    <rect x="45" y="40" width="40" height="20" fill="#1e293b"/>
-                    <rect x="45" y="70" width="40" height="20" fill="#1e293b"/>
-                    <rect x="45" y="100" width="40" height="20" fill="#1e293b"/>
-                    <rect x="45" y="130" width="40" height="20" fill="#1e293b"/>
-                    
-                    <rect x="110" y="30" width="50" height="150" fill="#334155" rx="5"/>
-                    <rect x="115" y="40" width="40" height="20" fill="#1e293b"/>
-                    <rect x="115" y="70" width="40" height="20" fill="#1e293b"/>
-                    <rect x="115" y="100" width="40" height="20" fill="#1e293b"/>
-                    <rect x="115" y="130" width="40" height="20" fill="#1e293b"/>
-                </svg>
-                <h3 style="color: #b45309; margin-top: 15px;">Server Room</h3>
-                <span class="ar" style="font-weight:bold; color: #b45309;">(غرفة السيرفرات)</span>
-            </div>
-            
-            <div class="content-panel">
-                <h2 class="scenario-title">Scenario 3 <span class="ar">(سيناريو 3)</span></h2>
-                <div class="details">
-                    <p><strong>Environment <span class="ar">(البيئة)</span>:</strong> Clean room, no EMI <span class="ar">(غرفة نظيفة، لا يوجد تداخل كهرومغناطيسي)</span>.</p>
-                    <p><strong>Distance <span class="ar">(المسافة)</span>:</strong> 25 meters <span class="ar">(25 متر)</span>.</p>
-                    <p><strong>Speed <span class="ar">(السرعة)</span>:</strong> 40 Gbps.</p>
-                </div>
-                
-                <h3>Choose the best cable <span class="ar">(اختر أفضل كيبل)</span>:</h3>
-                <div class="options-container" id="options3">
-                    <button class="cable-btn" onclick="checkAnswer(3, false, 'Cat 6 max speed is 10 Gbps. <span class=\'ar\'>(أقصى سرعة لـ Cat 6 هي 10 Gbps)</span>')">
-                        <span class="cable-icon">📶</span> Cat 6
-                    </button>
-                    <button class="cable-btn" onclick="checkAnswer(3, true, 'Awesome! Cat 8 is designed for Server Rooms, supporting 40Gbps up to 30m. <span class=\'ar\'>(رائع! Cat 8 مصمم لغرف السيرفرات ويدعم 40Gbps حتى 30 متر)</span>')">
-                        <span class="cable-icon">⚡</span> Cat 8
-                    </button>
-                    <button class="cable-btn" onclick="checkAnswer(3, false, 'Cat 5 is outdated and very slow (100 Mbps). <span class=\'ar\'>(Cat 5 قديم وبطيء جداً)</span>')">
-                        <span class="cable-icon">📶</span> Cat 5
-                    </button>
-                </div>
-                
-                <div id="feedback3" class="feedback"></div>
-                <button id="restart" class="restart-btn" onclick="location.reload()" style="display:none;">Restart Simulation <span class="ar">(إعادة المحاكاة)</span> 🔄</button>
-            </div>
-        </div>
-
-    </div>
-
     <script>
-        function checkAnswer(scenarioId, isCorrect, message) {
-            const feedbackDiv = document.getElementById('feedback' + scenarioId);
-            const nextBtn = document.getElementById('next' + scenarioId);
-            
-            feedbackDiv.innerHTML = message;
-            
-            if (isCorrect) {
-                feedbackDiv.className = 'feedback correct';
-                if(nextBtn) nextBtn.style.display = 'block';
-                if(scenarioId === 3) document.getElementById('restart').style.display = 'block';
-                
-                const options = document.getElementById('options' + scenarioId).getElementsByTagName('button');
-                for(let i=0; i<options.length; i++) {
-                    options[i].disabled = true;
-                    options[i].style.opacity = '0.6';
-                    options[i].style.cursor = 'not-allowed';
-                    options[i].style.transform = 'none';
-                }
-            } else {
-                feedbackDiv.className = 'feedback wrong';
-            }
+    document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; }, false);
+    document.addEventListener('keydown', function(e) {
+        if (e.keyCode === 123 || 
+            (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || 
+            (e.ctrlKey && (e.keyCode === 85 || e.keyCode === 83 || e.keyCode === 80))) {
+            e.preventDefault(); return false;
         }
-
-        function nextScenario(nextId) {
-            const scenarios = document.getElementsByClassName('scenario');
-            for(let i=0; i<scenarios.length; i++) {
-                scenarios[i].classList.remove('active');
-            }
-            document.getElementById('scenario' + nextId).classList.add('active');
+        if (e.metaKey && e.altKey && (e.keyCode === 73 || e.keyCode === 85)) { e.preventDefault(); return false; }
+    }, false);
+    setInterval(function() { (function() { try { var _0xd = function() { return false; }; _0xd['constructor']('debugger'](); } catch(e) {} })(); }, 800);
+    </script>
+</head>
+<body style="margin:0; padding:0; background:#f0f4f8; overflow-x:hidden;">
+    <script>
+    (function() {
+        var _0x1a2b = "PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIj4KPGhlYWQ+CiAgICA8bWV0YSBjaGFyc2V0PSJVVEYtOCI+CiAgICA8bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEuMCI+CiAgICA8dGl0bGU+TmV0d29yayBDYWJsZXMgU2ltdWxhdGlvbjwvdGl0bGU+CiAgICA8bGluayByZWw9Imljb24iIGhyZWY9ImRhdGE6aW1hZ2Uvc3ZnK3htbCw8c3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDEwMCAxMDAnPjx0ZXh0IHk9Jy45ZW0nIGZvbnQtc2l6ZT0nOTAnPvCflIw8L3RleHQ+PC9zdmc+Ij4KICAgIDxzdHlsZT4KICAgICAgICA6cm9vdCB7CiAgICAgICAgICAgIC0tcHJpbWFyeTogIzFlM2E4YTsKICAgICAgICAgICAgLS1zZWNvbmRhcnk6ICMzYjgyZjY7CiAgICAgICAgICAgIC0tYmctY29sb3I6ICNmMGY0Zjg7CiAgICAgICAgICAgIC0tdGV4dC1jb2xvcjogIzMzMzsKICAgICAgICAgICAgLS1jb3JyZWN0OiAjMTY2NTM0OwogICAgICAgICAgICAtLXdyb25nOiAjOTkxYjFiOwogICAgICAgIH0KCiAgICAgICAgYm9keSB7CiAgICAgICAgICAgIGZvbnQtZmFtaWx5OiAnU2Vnb2UgVUknLCBUYWhvbWEsIEdlbmV2YSwgVmVyZGFuYSwgc2Fucy1zZXJpZjsKICAgICAgICAgICAgYmFja2dyb3VuZC1jb2xvcjogdmFyKC0tYmctY29sb3IpOwogICAgICAgICAgICBjb2xvcjogdmFyKC0tdGV4dC1jb2xvcik7CiAgICAgICAgICAgIG1hcmdpbjogMDsKICAgICAgICAgICAgcGFkZGluZzogMDsKICAgICAgICAgICAgZGlzcGxheTogZmxleDsKICAgICAgICAgICAgZmxleC1kaXJlY3Rpb246IGNvbHVtbjsKICAgICAgICAgICAgYWxpZ24taXRlbXM6IGNlbnRlcjsKICAgICAgICB9CgogICAgICAgIC5oZWFkZXIgewogICAgICAgICAgICBiYWNrZ3JvdW5kLWNvbG9yOiB2YXIoLS1wcmltYXJ5KTsKICAgICAgICAgICAgY29sb3I6IHdoaXRlOwogICAgICAgICAgICB3aWR0aDogMTAwJTsKICAgICAgICAgICAgcGFkZGluZzogMjBweCAwOwogICAgICAgICAgICB0ZXh0LWFsaWduOiBjZW50ZXI7CiAgICAgICAgICAgIGJveC1zaGFkb3c6IDAgNHB4IDEwcHggcmdiYSgwLDAsMCwwLjE1KTsKICAgICAgICB9CiAgICAgICAgLmhlYWRlciBoMSB7IG1hcmdpbjogMDsgZm9udC1zaXplOiAzMnB4OyB9CiAgICAgICAgLmhlYWRlciBoMiB7IG1hcmdpbjogOHB4IDAgMCAwOyBmb250LXNpemU6IDIwcHg7IGZvbnQtd2VpZ2h0OiAzMDA7IGNvbG9yOiAjYmZkYmZlOyB9CiAgICAgICAgLmhlYWRlciBwIHsgbWFyZ2luOiA1cHggMCAwIDA7IGZvbnQtc2l6ZTogMTZweDsgb3BhY2l0eTogMC45OyB9CgogICAgICAgIC5jb250YWluZXIgewogICAgICAgICAgICBtYXgtd2lkdGg6IDkwMHB4OwogICAgICAgICAgICB3aWR0aDogOTUlOwogICAgICAgICAgICBtYXJnaW46IDMwcHggYXV0bzsKICAgICAgICB9CgogICAgICAgIC5zY2VuYXJpbyB7CiAgICAgICAgICAgIGJhY2tncm91bmQ6IHdoaXRlOwogICAgICAgICAgICBib3JkZXItcmFkaXVzOiAxNnB4OwogICAgICAgICAgICBwYWRkaW5nOiAwOwogICAgICAgICAgICBib3gtc2hhZG93OiAwIDEwcHggMjVweCAtNXB4IHJnYmEoMCwgMCwgMCwgMC4xKTsKICAgICAgICAgICAgZGlzcGxheTogbm9uZTsKICAgICAgICAgICAgb3ZlcmZsb3c6IGhpZGRlbjsKICAgICAgICAgICAgYW5pbWF0aW9uOiBmYWRlSW4gMC42cyBjdWJpYy1iZXppZXIoMC4yMywgMSwgMC4zMiwgMSk7CiAgICAgICAgfQogICAgICAgIC5zY2VuYXJpby5hY3RpdmUgeyBkaXNwbGF5OiBmbGV4OyBmbGV4LWRpcmVjdGlvbjogY29sdW1uOyB3aWR0aDogMTAwJTsgfQoKICAgICAgICBAbWVkaWEobWluLXdpZHRoOiA3NjhweCkgewogICAgICAgICAgICAuc2NlbmFyaW8uYWN0aXZlIHsgZmxleC1kaXJlY3Rpb246IHJvdzsgfQogICAgICAgIH0KCiAgICAgICAgQGtleWZyYW1lcyBmYWRlSW4gewogICAgICAgICAgICBmcm9tIHsgb3BhY2l0eTogMDsgdHJhbnNmb3JtOiB0cmFuc2xhdGVZKDMwcHgpIHNjYWxlKDAuOTgpOyB9CiAgICAgICAgICAgIHRvIHsgb3BhY2l0eTogMTsgdHJhbnNmb3JtOiB0cmFuc2xhdGVZKDApIHNjYWxlKDEpOyB9CiAgICAgICAgfQoKICAgICAgICAudmlzdWFsLXBhbmVsIHsKICAgICAgICAgICAgcGFkZGluZzogNDBweCAyMHB4OwogICAgICAgICAgICBkaXNwbGF5OiBmbGV4OwogICAgICAgICAgICBmbGV4LWRpcmVjdGlvbjogY29sdW1uOwogICAgICAgICAgICBhbGlnbi1pdGVtczogY2VudGVyOwogICAgICAgICAgICBqdXN0aWZ5LWNvbnRlbnQ6IGNlbnRlcjsKICAgICAgICAgICAgZmxleDogMTsKICAgICAgICAgICAgYm9yZGVyLWJvdHRvbTogMnB4IHNvbGlkICNlMmU4ZjA7CiAgICAgICAgfQogICAgICAgIEBtZWRpYShtaW4td2lkdGg6IDc2OHB4KSB7CiAgICAgICAgICAgIC52aXN1YWwtcGFuZWwgeyBib3JkZXItYm90dG9tOiBub25lOyBib3JkZXItcmlnaHQ6IDJweCBzb2xpZCAjZTJlOGYwOyB9CiAgICAgICAgfQoKICAgICAgICAuY29udGVudC1wYW5lbCB7CiAgICAgICAgICAgIHBhZGRpbmc6IDMwcHg7CiAgICAgICAgICAgIGZsZXg6IDEuNTsKICAgICAgICAgICAgZGlzcGxheTogZmxleDsKICAgICAgICAgICAgZmxleC1kaXJlY3Rpb246IGNvbHVtbjsKICAgICAgICB9CgogICAgICAgIC5zY2VuYXJpby10aXRsZSB7CiAgICAgICAgICAgIG1hcmdpbi10b3A6IDA7CiAgICAgICAgICAgIGNvbG9yOiB2YXIoLS1wcmltYXJ5KTsKICAgICAgICAgICAgZm9udC1zaXplOiAyNHB4OwogICAgICAgICAgICBib3JkZXItYm90dG9tOiAycHggc29saWQgI2UyZThmMDsKICAgICAgICAgICAgcGFkZGluZy1ib3R0b206IDEwcHg7CiAgICAgICAgfQoKICAgICAgICAuZGV0YWlscyB7CiAgICAgICAgICAgIGJhY2tncm91bmQ6ICNmOGZhZmM7CiAgICAgICAgICAgIHBhZGRpbmc6IDE1cHg7CiAgICAgICAgICAgIGJvcmRlci1yYWRpdXM6IDhweDsKICAgICAgICAgICAgYm9yZGVyLWxlZnQ6IDVweCBzb2xpZCB2YXIoLS1zZWNvbmRhcnkpOwogICAgICAgICAgICBtYXJnaW46IDE1cHggMDsKICAgICAgICAgICAgZm9udC1zaXplOiAxNnB4OwogICAgICAgICAgICBsaW5lLWhlaWdodDogMS42OwogICAgICAgIH0KCiAgICAgICAgLmFyIHsgY29sb3I6ICM2NDc0OGI7IGZvbnQtc2l6ZTogMTRweDsgbWFyZ2luLWxlZnQ6IDVweDsgfQoKICAgICAgICAub3B0aW9ucy1jb250YWluZXIgewogICAgICAgICAgICBkaXNwbGF5OiBncmlkOwogICAgICAgICAgICBncmlkLXRlbXBsYXRlLWNvbHVtbnM6IDFmcjsKICAgICAgICAgICAgZ2FwOiAxMnB4OwogICAgICAgICAgICBtYXJnaW4tdG9wOiAyMHB4OwogICAgICAgIH0KCiAgICAgICAgLmNhYmxlLWJ0biB7CiAgICAgICAgICAgIGJhY2tncm91bmQ6ICNmMWY1Zjk7CiAgICAgICAgICAgIGJvcmRlcjogMnB4IHNvbGlkICNjYmQ1ZTE7CiAgICAgICAgICAgIHBhZGRpbmc6IDEycHggMTVweDsKICAgICAgICAgICAgYm9yZGVyLXJhZGl1czogOHB4OwogICAgICAgICAgICBjdXJzb3I6IHBvaW50ZXI7CiAgICAgICAgICAgIGZvbnQtc2l6ZTogMTZweDsKICAgICAgICAgICAgZm9udC13ZWlnaHQ6IDYwMDsKICAgICAgICAgICAgY29sb3I6ICMzMzQxNTU7CiAgICAgICAgICAgIHRyYW5zaXRpb246IGFsbCAwLjJzIGVhc2U7CiAgICAgICAgICAgIGRpc3BsYXk6IGZsZXg7CiAgICAgICAgICAgIGFsaWduLWl0ZW1zOiBjZW50ZXI7CiAgICAgICAgICAgIGp1c3RpZnktY29udGVudDogZmxleC1zdGFydDsKICAgICAgICAgICAgdGV4dC1hbGlnbjogbGVmdDsKICAgICAgICB9CiAgICAgICAgLmNhYmxlLWJ0bjpob3Zlcjpub3QoOmRpc2FibGVkKSB7CiAgICAgICAgICAgIGJhY2tncm91bmQ6ICNlMmU4ZjA7CiAgICAgICAgICAgIGJvcmRlci1jb2xvcjogIzk0YTNiODsKICAgICAgICAgICAgdHJhbnNmb3JtOiB0cmFuc2xhdGVYKDVweCk7CiAgICAgICAgfQogICAgICAgIC5jYWJsZS1pY29uIHsgZm9udC1zaXplOiAyNHB4OyBtYXJnaW4tcmlnaHQ6IDE1cHg7IH0KCiAgICAgICAgLmZlZWRiYWNrIHsKICAgICAgICAgICAgbWFyZ2luLXRvcDogMjBweDsKICAgICAgICAgICAgcGFkZGluZzogMTVweDsKICAgICAgICAgICAgYm9yZGVyLXJhZGl1czogOHB4OwogICAgICAgICAgICBmb250LXNpemU6IDE2cHg7CiAgICAgICAgICAgIGZvbnQtd2VpZ2h0OiBib2xkOwogICAgICAgICAgICBkaXNwbGF5OiBub25lOwogICAgICAgICAgICBhbmltYXRpb246IGZhZGVJbiAwLjRzOwogICAgICAgIH0KICAgICAgICAuZmVlZGJhY2suY29ycmVjdCB7CiAgICAgICAgICAgIGJhY2tncm91bmQ6ICNkY2ZjZTc7IGNvbG9yOiB2YXIoLS1jb3JyZWN0KTsgYm9yZGVyOiAxcHggc29saWQgI2JiZjdkMDsgZGlzcGxheTogYmxvY2s7CiAgICAgICAgfQogICAgICAgIC5mZWVkYmFjay53cm9uZyB7CiAgICAgICAgICAgIGJhY2tncm91bmQ6ICNmZWUyZTI7IGNvbG9yOiB2YXIoLS13cm9uZyk7IGJvcmRlcjogMXB4IHNvbGlkICNmZWNhY2E7IGRpc3BsYXk6IGJsb2NrOwogICAgICAgIH0KCiAgICAgICAgLm5leHQtYnRuLCAucmVzdGFydC1idG4gewogICAgICAgICAgICBtYXJnaW4tdG9wOiAyNXB4OwogICAgICAgICAgICBiYWNrZ3JvdW5kOiB2YXIoLS1zZWNvbmRhcnkpOwogICAgICAgICAgICBjb2xvcjogd2hpdGU7CiAgICAgICAgICAgIGJvcmRlcjogbm9uZTsKICAgICAgICAgICAgcGFkZGluZzogMTJweCAyNHB4OwogICAgICAgICAgICBmb250LXNpemU6IDE2cHg7CiAgICAgICAgICAgIGZvbnQtd2VpZ2h0OiBib2xkOwogICAgICAgICAgICBib3JkZXItcmFkaXVzOiA2cHg7CiAgICAgICAgICAgIGN1cnNvcjogcG9pbnRlcjsKICAgICAgICAgICAgZGlzcGxheTogbm9uZTsKICAgICAgICAgICAgYWxpZ24tc2VsZjogZmxleC1zdGFydDsKICAgICAgICAgICAgdHJhbnNpdGlvbjogYmFja2dyb3VuZCAwLjNzLCB0cmFuc2Zvcm0gMC4yczsKICAgICAgICB9CiAgICAgICAgLm5leHQtYnRuOmhvdmVyLCAucmVzdGFydC1idG46aG92ZXIgeyBiYWNrZ3JvdW5kOiAjMjU2M2ViOyB0cmFuc2Zvcm06IHNjYWxlKDEuMDUpOyB9CgogICAgICAgIC5hbmltYXRlZC1zdmcgeyB3aWR0aDogMTgwcHg7IGhlaWdodDogMTgwcHg7IH0KICAgIDwvc3R5bGU+CjwvaGVhZD4KPGJvZHk+CgogICAgPGRpdiBjbGFzcz0iaGVhZGVyIj4KICAgICAgICA8aDE+Q29tbXVuaWNhdGlvbiBhbmQgTmV0d29yazwvaDE+CiAgICAgICAgPGgyPkxlY3R1cmVyOiBTaGFkYSBNb2hhbW1lZDwvaDI+CiAgICAgICAgPHA+Q2FibGUgU2VsZWN0aW9uIEludGVyYWN0aXZlIFNpbXVsYXRpb24gPHNwYW4gY2xhc3M9ImFyIj4o2YXYrdin2YPYp9ipINin2K7YqtmK2KfYsSDYp9mE2YPZitio2YTYp9iqKTwvc3Bhbj48L3A+CiAgICA8L2Rpdj4KCiAgICA8ZGl2IGNsYXNzPSJjb250YWluZXIiPgogICAgICAgIAogICAgICAgIDwhLS0gU0NFTkFSSU8gMSAtLT4KICAgICAgICA8ZGl2IGlkPSJzY2VuYXJpbzEiIGNsYXNzPSJzY2VuYXJpbyBhY3RpdmUiPgogICAgICAgICAgICA8ZGl2IGNsYXNzPSJ2aXN1YWwtcGFuZWwiIHN0eWxlPSJiYWNrZ3JvdW5kOiBsaW5lYXItZ3JhZGllbnQoMTM1ZGVnLCAjZTBlN2ZmIDAlLCAjYzdkMmZlIDEwMCUpOyI+CiAgICAgICAgICAgICAgICA8IS0tIEZhY3RvcnkgU1ZHIC0tPgogICAgICAgICAgICAgICAgPHN2ZyBjbGFzcz0iYW5pbWF0ZWQtc3ZnIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgICAgICAgICAgICAgICAgICA8cmVjdCB4PSIyMCIgeT0iMTAwIiB3aWR0aD0iMTYwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjNjQ3NDhiIi8+CiAgICAgICAgICAgICAgICAgICAgPHJlY3QgeD0iNDAiIHk9IjUwIiB3aWR0aD0iMzAiIGhlaWdodD0iNTAiIGZpbGw9IiM0NzU1NjkiLz4KICAgICAgICAgICAgICAgICAgICA8cmVjdCB4PSI5MCIgeT0iMzAiIHdpZHRoPSIzMCIgaGVpZ2h0PSI3MCIgZmlsbD0iIzQ3NTU2OSIvPgogICAgICAgICAgICAgICAgICAgIDxyZWN0IHg9IjE0MCIgeT0iNjAiIHdpZHRoPSIzMCIgaGVpZ2h0PSI0MCIgZmlsbD0iIzQ3NTU2OSIvPgogICAgICAgICAgICAgICAgICAgIDxyZWN0IHg9IjMwIiB5PSIxMjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2NiZDVlMSIvPgogICAgICAgICAgICAgICAgICAgIDxyZWN0IHg9IjcwIiB5PSIxMjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2NiZDVlMSIvPgogICAgICAgICAgICAgICAgICAgIDxyZWN0IHg9IjExMCIgeT0iMTIwIiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIGZpbGw9IiNjYmQ1ZTEiLz4KICAgICAgICAgICAgICAgICAgICA8cmVjdCB4PSIxNTAiIHk9IjEyMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjY2JkNWUxIi8+CiAgICAgICAgICAgICAgICA8L3N2Zz4KICAgICAgICAgICAgICAgIDxoMyBzdHlsZT0iY29sb3I6ICMxZTNhOGE7IG1hcmdpbi10b3A6IDE1cHg7Ij5JbmR1c3RyaWFsIEZhY3Rvcnk8L2gzPgogICAgICAgICAgICAgICAgPHNwYW4gY2xhc3M9ImFyIiBzdHlsZT0iZm9udC13ZWlnaHQ6Ym9sZDsiPijZhdi12YbYuSDYtdmG2KfYudmKKTwvc3Bhbj4KICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgIAogICAgICAgICAgICA8ZGl2IGNsYXNzPSJjb250ZW50LXBhbmVsIj4KICAgICAgICAgICAgICAgIDxoMiBjbGFzcz0ic2NlbmFyaW8tdGl0bGUiPlNjZW5hcmlvIDEgPHNwYW4gY2xhc3M9ImFyIj4o2LPZitmG2KfYsdmK2YggMSk8L3NwYW4+PC9oMj4KICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9ImRldGFpbHMiPgogICAgICAgICAgICAgICAgICAgIDxwPjxzdHJvbmc+RW52aXJvbm1lbnQgPHNwYW4gY2xhc3M9ImFyIj4o2KfZhNio2YrYptipKTwvc3Bhbj46PC9zdHJvbmc+IEhpZ2ggRWxlY3Ryb21hZ25ldGljIEludGVyZmVyZW5jZSAoRU1JKSA8c3BhbiBjbGFzcz0iYXIiPijYqtiv2KfYrtmEINmD2YfYsdmI2YXYutmG2KfYt9mK2LPZiiDYudin2YTZiik8L3NwYW4+LjwvcD4KICAgICAgICAgICAgICAgICAgICA8cD48c3Ryb25nPkRpc3RhbmNlIDxzcGFuIGNsYXNzPSJhciI+KNin2YTZhdiz2KfZgdipKTwvc3Bhbj46PC9zdHJvbmc+IDE1MCBtZXRlcnMgPHNwYW4gY2xhc3M9ImFyIj4oMTUwINmF2KrYsSk8L3NwYW4+LjwvcD4KICAgICAgICAgICAgICAgICAgICA8cD48c3Ryb25nPlNwZWVkIDxzcGFuIGNsYXNzPSJhciI+KNin2YTYs9ix2LnYqSk8L3NwYW4+Ojwvc3Ryb25nPiAxIEdicHMgdG8gMTAgR2Jwcy48L3A+CiAgICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgPGgzPkNob29zZSB0aGUgYmVzdCBjYWJsZSA8c3BhbiBjbGFzcz0iYXIiPijYp9iu2KrYsSDYo9mB2LbZhCDZg9mK2KjZhCk8L3NwYW4+OjwvaDM+CiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPSJvcHRpb25zLWNvbnRhaW5lciIgaWQ9Im9wdGlvbnMxIj4KICAgICAgICAgICAgICAgICAgICA8YnV0dG9uIGNsYXNzPSJjYWJsZS1idG4iIG9uY2xpY2s9ImNoZWNrQW5zd2VyKDEsIGZhbHNlLCAnQ2F0IDYgaXMgdW5zaGllbGRlZCBhbmQgbWF4IGRpc3RhbmNlIGZvciAxMEdicHMgaXMgNTVtLiA8c3BhbiBjbGFzcz1cJ2FyXCc+KENhdCA2INi62YrYsSDZhdit2YXZiiDZiNij2YLYtdmJINmF2LPYp9mB2Kkg2YTYs9ix2LnYqSAxMEdicHMg2YfZiiA1NSDZhdiq2LEpPC9zcGFuPicpIj4KICAgICAgICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3M9ImNhYmxlLWljb24iPvCfk7Y8L3NwYW4+IENhdCA2IFVuc2hpZWxkZWQKICAgICAgICAgICAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICAgICAgICAgICAgICA8YnV0dG9uIGNsYXNzPSJjYWJsZS1idG4iIG9uY2xpY2s9ImNoZWNrQW5zd2VyKDEsIHRydWUsICdFeGNlbGxlbnQhIEZpYmVyIE9wdGljIGlzIG5vdCBhZmZlY3RlZCBieSBFTUkgYW5kIHN1cHBvcnRzIGxvbmcgZGlzdGFuY2VzLiA8c3BhbiBjbGFzcz1cJ2FyXCc+KNmF2YXYqtin2LIhINin2YTYo9mE2YrYp9mBINin2YTYttmI2KbZitipINmE2Kcg2KrYo9ir2LEg2KjYp9mE2KrYr9in2K7ZhCDYp9mE2YPZh9ix2YjZhdi62YbYp9i32YrYs9mKINmI2KrYr9i52YUg2KfZhNmF2LPYp9mB2KfYqiDYp9mE2LfZiNmK2YTYqSk8L3NwYW4+JykiPgogICAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzcz0iY2FibGUtaWNvbiI+8J+SoTwvc3Bhbj4gRmliZXIgT3B0aWMKICAgICAgICAgICAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICAgICAgICAgICAgICA8YnV0dG9uIGNsYXNzPSJjYWJsZS1idG4iIG9uY2xpY2s9ImNoZWNrQW5zd2VyKDEsIGZhbHNlLCAnQ2F0IDggbWF4IGRpc3RhbmNlIGlzIG9ubHkgMzBtLiA8c3BhbiBjbGFzcz1cJ2FyXCc+KNij2YLYtdmJINmF2LPYp9mB2Kkg2YTZgCBDYXQgOCDZh9mKIDMwINmF2KrYsSDZgdmC2LcpPC9zcGFuPicpIj4KICAgICAgICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3M9ImNhYmxlLWljb24iPvCflIw8L3NwYW4+IENhdCA4CiAgICAgICAgICAgICAgICAgICAgPC9idXR0b24+CiAgICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgPGRpdiBpZD0iZmVlZGJhY2sxIiBjbGFzcz0iZmVlZGJhY2siPjwvZGl2PgogICAgICAgICAgICAgICAgPGJ1dHRvbiBpZD0ibmV4dDEiIGNsYXNzPSJuZXh0LWJ0biIgb25jbGljaz0ibmV4dFNjZW5hcmlvKDIpIj5OZXh0IFNjZW5hcmlvIDxzcGFuIGNsYXNzPSJhciI+KNin2YTYs9mK2YbYp9ix2YrZiCDYp9mE2KrYp9mE2YopPC9zcGFuPiAmcmFycjs8L2J1dHRvbj4KICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgPC9kaXY+CgogICAgICAgIDwhLS0gU0NFTkFSSU8gMiAtLT4KICAgICAgICA8ZGl2IGlkPSJzY2VuYXJpbzIiIGNsYXNzPSJzY2VuYXJpbyI+CiAgICAgICAgICAgIDxkaXYgY2xhc3M9InZpc3VhbC1wYW5lbCIgc3R5bGU9ImJhY2tncm91bmQ6IGxpbmVhci1ncmFkaWVudCgxMzVkZWcsICNkY2ZjZTcgMCUsICNiYmY3ZDAgMTAwJSk7Ij4KICAgICAgICAgICAgICAgIDwhLS0gT2ZmaWNlIFNWRyAtLT4KICAgICAgICAgICAgICAgIDxzdmcgY2xhc3M9ImFuaW1hdGVkLXN2ZyIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgICAgICAgICAgICAgICAgICAgPHJlY3QgeD0iNTAiIHk9IjQwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iIzNiODJmNiIgcng9IjEwIi8+CiAgICAgICAgICAgICAgICAgICAgPHJlY3QgeD0iNjUiIHk9IjYwIiB3aWR0aD0iMjUiIGhlaWdodD0iMjAiIGZpbGw9IiNmZmZmZmYiLz4KICAgICAgICAgICAgICAgICAgICA8cmVjdCB4PSIxMTAiIHk9IjYwIiB3aWR0aD0iMjUiIGhlaWdodD0iMjAiIGZpbGw9IiNmZmZmZmYiLz4KICAgICAgICAgICAgICAgICAgICA8cmVjdCB4PSI2NSIgeT0iMTAwIiB3aWR0aD0iMjUiIGhlaWdodD0iMjAiIGZpbGw9IiNmZmZmZmYiLz4KICAgICAgICAgICAgICAgICAgICA8cmVjdCB4PSIxMTAiIHk9IjEwMCIgd2lkdGg9IjI1IiBoZWlnaHQ9IjIwIiBmaWxsPSIjZmZmZmZmIi8+CiAgICAgICAgICAgICAgICAgICAgPHJlY3QgeD0iNjUiIHk9IjE0MCIgd2lkdGg9IjI1IiBoZWlnaHQ9IjIwIiBmaWxsPSIjZmZmZmZmIi8+CiAgICAgICAgICAgICAgICAgICAgPHJlY3QgeD0iMTEwIiB5PSIxNDAiIHdpZHRoPSIyNSIgaGVpZ2h0PSIyMCIgZmlsbD0iI2ZmZmZmZiIvPgogICAgICAgICAgICAgICAgICAgIDxyZWN0IHg9Ijg1IiB5PSIxNzAiIHdpZHRoPSIzMCIgaGVpZ2h0PSIyMCIgZmlsbD0iIzFlM2E4YSIvPgogICAgICAgICAgICAgICAgPC9zdmc+CiAgICAgICAgICAgICAgICA8aDMgc3R5bGU9ImNvbG9yOiAjMTY2NTM0OyBtYXJnaW4tdG9wOiAxNXB4OyI+T2ZmaWNlIEJ1aWxkaW5nPC9oMz4KICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzPSJhciIgc3R5bGU9ImZvbnQtd2VpZ2h0OmJvbGQ7IGNvbG9yOiAjMTY2NTM0OyI+KNmF2KjZhtmJINmF2YPYp9iq2KgpPC9zcGFuPgogICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgCiAgICAgICAgICAgIDxkaXYgY2xhc3M9ImNvbnRlbnQtcGFuZWwiPgogICAgICAgICAgICAgICAgPGgyIGNsYXNzPSJzY2VuYXJpby10aXRsZSI+U2NlbmFyaW8gMiA8c3BhbiBjbGFzcz0iYXIiPijYs9mK2YbYp9ix2YrZiCAyKTwvc3Bhbj48L2gyPgogICAgICAgICAgICAgICAgPGRpdiBjbGFzcz0iZGV0YWlscyI+CiAgICAgICAgICAgICAgICAgICAgPHA+PHN0cm9uZz5FbnZpcm9ubWVudCA8c3BhbiBjbGFzcz0iYXIiPijYp9mE2KjZitim2KkpPC9zcGFuPjo8L3N0cm9uZz4gTW9kZXJhdGUgRU1JIChFbGVjdHJpY2FsIHdpcmluZyBuZWFyYnkpIDxzcGFuIGNsYXNzPSJhciI+KNiq2K/Yp9iu2YQg2YPZh9ix2YjZhdi62YbYp9i32YrYs9mKINmF2KrZiNiz2LfYjCDYqtmF2K/Zitiv2KfYqiDZg9mH2LHYqNin2KbZitipINmC2LHZitio2KkpPC9zcGFuPi48L3A+CiAgICAgICAgICAgICAgICAgICAgPHA+PHN0cm9uZz5EaXN0YW5jZSA8c3BhbiBjbGFzcz0iYXIiPijYp9mE2YXYs9in2YHYqSk8L3NwYW4+Ojwvc3Ryb25nPiA3MCBtZXRlcnMgPHNwYW4gY2xhc3M9ImFyIj4oNzAg2YXYqtixKTwvc3Bhbj4uPC9wPgogICAgICAgICAgICAgICAgICAgIDxwPjxzdHJvbmc+U3BlZWQgPHNwYW4gY2xhc3M9ImFyIj4o2KfZhNiz2LHYudipKTwvc3Bhbj46PC9zdHJvbmc+IDEwIEdicHMuPC9wPgogICAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgIDxoMz5DaG9vc2UgdGhlIGJlc3QgY2FibGUgPHNwYW4gY2xhc3M9ImFyIj4o2KfYrtiq2LEg2KPZgdi22YQg2YPZitio2YQpPC9zcGFuPjo8L2gzPgogICAgICAgICAgICAgICAgPGRpdiBjbGFzcz0ib3B0aW9ucy1jb250YWluZXIiIGlkPSJvcHRpb25zMiI+CiAgICAgICAgICAgICAgICAgICAgPGJ1dHRvbiBjbGFzcz0iY2FibGUtYnRuIiBvbmNsaWNrPSJjaGVja0Fuc3dlcigyLCBmYWxzZSwgJ0NhdCA1ZSBvbmx5IHN1cHBvcnRzIHVwIHRvIDEgR2Jwcy4gPHNwYW4gY2xhc3M9XCdhclwnPihDYXQgNWUg2YrYr9i52YUg2K3YqtmJIDEgR2JwcyDZgdmC2LcpPC9zcGFuPicpIj4KICAgICAgICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3M9ImNhYmxlLWljb24iPvCflIw8L3NwYW4+IENhdCA1ZQogICAgICAgICAgICAgICAgICAgIDwvYnV0dG9uPgogICAgICAgICAgICAgICAgICAgIDxidXR0b24gY2xhc3M9ImNhYmxlLWJ0biIgb25jbGljaz0iY2hlY2tBbnN3ZXIoMiwgZmFsc2UsICdDYXQgNiAoVW5zaGllbGRlZCkgd2lsbCBiZSBhZmZlY3RlZCBieSBFTUkgb3ZlciB0aGlzIGRpc3RhbmNlLiA8c3BhbiBjbGFzcz1cJ2FyXCc+KENhdCA2INi62YrYsSDYp9mE2YXYrdmF2Yog2LPZitiq2KPYq9ixINio2KfZhNiq2K/Yp9iu2YQg2LnYqNixINmH2LDZhyDYp9mE2YXYs9in2YHYqSk8L3NwYW4+JykiPgogICAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzcz0iY2FibGUtaWNvbiI+8J+Ttjwvc3Bhbj4gQ2F0IDYgVW5zaGllbGRlZAogICAgICAgICAgICAgICAgICAgIDwvYnV0dG9uPgogICAgICAgICAgICAgICAgICAgIDxidXR0b24gY2xhc3M9ImNhYmxlLWJ0biIgb25jbGljaz0iY2hlY2tBbnN3ZXIoMiwgdHJ1ZSwgJ0NvcnJlY3QhIFNoaWVsZGVkIGNhYmxlcyBwcm90ZWN0IGFnYWluc3QgbW9kZXJhdGUgRU1JIGFuZCBzdXBwb3J0IDEwR2JwcyB1cCB0byAxMDBtLiA8c3BhbiBjbGFzcz1cJ2FyXCc+KNi12K3ZititISDYp9mE2YPZitio2YTYp9iqINin2YTZhdit2YXZitipINiq2K3ZhdmKINmF2YYg2KfZhNiq2K/Yp9iu2YQg2YjYqtiv2LnZhSAxMEdicHMg2K3YqtmJIDEwMCDZhdiq2LEpPC9zcGFuPicpIj4KICAgICAgICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3M9ImNhYmxlLWljb24iPvCfm6HvuI88L3NwYW4+IFNoaWVsZGVkIChDYXQgNmEvNykKICAgICAgICAgICAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICA8ZGl2IGlkPSJmZWVkYmFjazIiIGNsYXNzPSJmZWVkYmFjayI+PC9kaXY+CiAgICAgICAgICAgICAgICA8YnV0dG9uIGlkPSJuZXh0MiIgY2xhc3M9Im5leHQtYnRuIiBvbmNsaWNrPSJuZXh0U2NlbmFyaW8oMykiPk5leHQgU2NlbmFyaW8gPHNwYW4gY2xhc3M9ImFyIj4o2KfZhNiz2YrZhtin2LHZitmIINin2YTYqtin2YTZiik8L3NwYW4+ICZyYXJyOzwvYnV0dG9uPgogICAgICAgICAgICA8L2Rpdj4KICAgICAgICA8L2Rpdj4KCiAgICAgICAgPCEtLSBTQ0VOQVJJTyAzIC0tPgogICAgICAgIDxkaXYgaWQ9InNjZW5hcmlvMyIgY2xhc3M9InNjZW5hcmlvIj4KICAgICAgICAgICAgPGRpdiBjbGFzcz0idmlzdWFsLXBhbmVsIiBzdHlsZT0iYmFja2dyb3VuZDogbGluZWFyLWdyYWRpZW50KDEzNWRlZywgI2ZlZjNjNyAwJSwgI2ZkZTY4YSAxMDAlKTsiPgogICAgICAgICAgICAgICAgPCEtLSBEYXRhIENlbnRlciBTVkcgLS0+CiAgICAgICAgICAgICAgICA8c3ZnIGNsYXNzPSJhbmltYXRlZC1zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogICAgICAgICAgICAgICAgICAgIDxyZWN0IHg9IjQwIiB5PSIzMCIgd2lkdGg9IjUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iIzMzNDE1NSIgcng9IjUiLz4KICAgICAgICAgICAgICAgICAgICA8cmVjdCB4PSI0NSIgeT0iNDAiIHdpZHRoPSI0MCIgaGVpZ2h0PSIyMCIgZmlsbD0iIzFlMjkzYiIvPgogICAgICAgICAgICAgICAgICAgIDxyZWN0IHg9IjQ1IiB5PSI3MCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMWUyOTNiIi8+CiAgICAgICAgICAgICAgICAgICAgPHJlY3QgeD0iNDUiIHk9IjEwMCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMWUyOTNiIi8+CiAgICAgICAgICAgICAgICAgICAgPHJlY3QgeD0iNDUiIHk9IjEzMCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMWUyOTNiIi8+CiAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgPHJlY3QgeD0iMTEwIiB5PSIzMCIgd2lkdGg9IjUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iIzMzNDE1NSIgcng9IjUiLz4KICAgICAgICAgICAgICAgICAgICA8cmVjdCB4PSIxMTUiIHk9IjQwIiB3aWR0aD0iNDAiIGhlaWdodD0iMjAiIGZpbGw9IiMxZTI5M2IiLz4KICAgICAgICAgICAgICAgICAgICA8cmVjdCB4PSIxMTUiIHk9IjcwIiB3aWR0aD0iNDAiIGhlaWdodD0iMjAiIGZpbGw9IiMxZTI5M2IiLz4KICAgICAgICAgICAgICAgICAgICA8cmVjdCB4PSIxMTUiIHk9IjEwMCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMWUyOTNiIi8+CiAgICAgICAgICAgICAgICAgICAgPHJlY3QgeD0iMTE1IiB5PSIxMzAiIHdpZHRoPSI0MCIgaGVpZ2h0PSIyMCIgZmlsbD0iIzFlMjkzYiIvPgogICAgICAgICAgICAgICAgPC9zdmc+CiAgICAgICAgICAgICAgICA8aDMgc3R5bGU9ImNvbG9yOiAjYjQ1MzA5OyBtYXJnaW4tdG9wOiAxNXB4OyI+U2VydmVyIFJvb208L2gzPgogICAgICAgICAgICAgICAgPHNwYW4gY2xhc3M9ImFyIiBzdHlsZT0iZm9udC13ZWlnaHQ6Ym9sZDsgY29sb3I6ICNiNDUzMDk7Ij4o2LrYsdmB2Kkg2KfZhNiz2YrYsdmB2LHYp9iqKTwvc3Bhbj4KICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgIAogICAgICAgICAgICA8ZGl2IGNsYXNzPSJjb250ZW50LXBhbmVsIj4KICAgICAgICAgICAgICAgIDxoMiBjbGFzcz0ic2NlbmFyaW8tdGl0bGUiPlNjZW5hcmlvIDMgPHNwYW4gY2xhc3M9ImFyIj4o2LPZitmG2KfYsdmK2YggMyk8L3NwYW4+PC9oMj4KICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9ImRldGFpbHMiPgogICAgICAgICAgICAgICAgICAgIDxwPjxzdHJvbmc+RW52aXJvbm1lbnQgPHNwYW4gY2xhc3M9ImFyIj4o2KfZhNio2YrYptipKTwvc3Bhbj46PC9zdHJvbmc+IENsZWFuIHJvb20sIG5vIEVNSSA8c3BhbiBjbGFzcz0iYXIiPijYutix2YHYqSDZhti42YrZgdip2Iwg2YTYpyDZitmI2KzYryDYqtiv2KfYrtmEINmD2YfYsdmI2YXYutmG2KfYt9mK2LPZiik8L3NwYW4+LjwvcD4KICAgICAgICAgICAgICAgICAgICA8cD48c3Ryb25nPkRpc3RhbmNlIDxzcGFuIGNsYXNzPSJhciI+KNin2YTZhdiz2KfZgdipKTwvc3Bhbj46PC9zdHJvbmc+IDI1IG1ldGVycyA8c3BhbiBjbGFzcz0iYXIiPigyNSDZhdiq2LEpPC9zcGFuPi48L3A+CiAgICAgICAgICAgICAgICAgICAgPHA+PHN0cm9uZz5TcGVlZCA8c3BhbiBjbGFzcz0iYXIiPijYp9mE2LPYsdi52KkpPC9zcGFuPjo8L3N0cm9uZz4gNDAgR2Jwcy48L3A+CiAgICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgPGgzPkNob29zZSB0aGUgYmVzdCBjYWJsZSA8c3BhbiBjbGFzcz0iYXIiPijYp9iu2KrYsSDYo9mB2LbZhCDZg9mK2KjZhCk8L3NwYW4+OjwvaDM+CiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPSJvcHRpb25zLWNvbnRhaW5lciIgaWQ9Im9wdGlvbnMzIj4KICAgICAgICAgICAgICAgICAgICA8YnV0dG9uIGNsYXNzPSJjYWJsZS1idG4iIG9uY2xpY2s9ImNoZWNrQW5zd2VyKDMsIGZhbHNlLCAnQ2F0IDYgbWF4IHNwZWVkIGlzIDEwIEdicHMuIDxzcGFuIGNsYXNzPVwnYXJcJz4o2KPZgti12Ykg2LPYsdi52Kkg2YTZgCBDYXQgNiDZh9mKIDEwIEdicHMpPC9zcGFuPicpIj4KICAgICAgICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3M9ImNhYmxlLWljb24iPvCfk7Y8L3NwYW4+IENhdCA2CiAgICAgICAgICAgICAgICAgICAgPC9idXR0b24+CiAgICAgICAgICAgICAgICAgICAgPGJ1dHRvbiBjbGFzcz0iY2FibGUtYnRuIiBvbmNsaWNrPSJjaGVja0Fuc3dlcigzLCB0cnVlLCAnQXdlc29tZSEgQ2F0IDggaXMgZGVzaWduZWQgZm9yIFNlcnZlciBSb29tcywgc3VwcG9ydGluZyA0MEdicHMgdXAgdG8gMzBtLiA8c3BhbiBjbGFzcz1cJ2FyXCc+KNix2KfYpti5ISBDYXQgOCDZhdi12YXZhSDZhNi62LHZgSDYp9mE2LPZitix2YHYsdin2Kog2YjZitiv2LnZhSA0MEdicHMg2K3YqtmJIDMwINmF2KrYsSk8L3NwYW4+JykiPgogICAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzcz0iY2FibGUtaWNvbiI+4pqhPC9zcGFuPiBDYXQgOAogICAgICAgICAgICAgICAgICAgIDwvYnV0dG9uPgogICAgICAgICAgICAgICAgICAgIDxidXR0b24gY2xhc3M9ImNhYmxlLWJ0biIgb25jbGljaz0iY2hlY2tBbnN3ZXIoMywgZmFsc2UsICdDYXQgNSBpcyBvdXRkYXRlZCBhbmQgdmVyeSBzbG93ICgxMDAgTWJwcykuIDxzcGFuIGNsYXNzPVwnYXJcJz4oQ2F0IDUg2YLYr9mK2YUg2YjYqNi32YrYoSDYrNiv2KfZiyk8L3NwYW4+JykiPgogICAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzcz0iY2FibGUtaWNvbiI+8J+Ttjwvc3Bhbj4gQ2F0IDUKICAgICAgICAgICAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICA8ZGl2IGlkPSJmZWVkYmFjazMiIGNsYXNzPSJmZWVkYmFjayI+PC9kaXY+CiAgICAgICAgICAgICAgICA8YnV0dG9uIGlkPSJyZXN0YXJ0IiBjbGFzcz0icmVzdGFydC1idG4iIG9uY2xpY2s9ImxvY2F0aW9uLnJlbG9hZCgpIiBzdHlsZT0iZGlzcGxheTpub25lOyI+UmVzdGFydCBTaW11bGF0aW9uIDxzcGFuIGNsYXNzPSJhciI+KNil2LnYp9iv2Kkg2KfZhNmF2K3Yp9mD2KfYqSk8L3NwYW4+IPCflIQ8L2J1dHRvbj4KICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgPC9kaXY+CgogICAgPC9kaXY+CgogICAgPHNjcmlwdD4KICAgICAgICBmdW5jdGlvbiBjaGVja0Fuc3dlcihzY2VuYXJpb0lkLCBpc0NvcnJlY3QsIG1lc3NhZ2UpIHsKICAgICAgICAgICAgY29uc3QgZmVlZGJhY2tEaXYgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnZmVlZGJhY2snICsgc2NlbmFyaW9JZCk7CiAgICAgICAgICAgIGNvbnN0IG5leHRCdG4gPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnbmV4dCcgKyBzY2VuYXJpb0lkKTsKICAgICAgICAgICAgCiAgICAgICAgICAgIGZlZWRiYWNrRGl2LmlubmVySFRNTCA9IG1lc3NhZ2U7CiAgICAgICAgICAgIAogICAgICAgICAgICBpZiAoaXNDb3JyZWN0KSB7CiAgICAgICAgICAgICAgICBmZWVkYmFja0Rpdi5jbGFzc05hbWUgPSAnZmVlZGJhY2sgY29ycmVjdCc7CiAgICAgICAgICAgICAgICBpZihuZXh0QnRuKSBuZXh0QnRuLnN0eWxlLmRpc3BsYXkgPSAnYmxvY2snOwogICAgICAgICAgICAgICAgaWYoc2NlbmFyaW9JZCA9PT0gMykgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3Jlc3RhcnQnKS5zdHlsZS5kaXNwbGF5ID0gJ2Jsb2NrJzsKICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgY29uc3Qgb3B0aW9ucyA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdvcHRpb25zJyArIHNjZW5hcmlvSWQpLmdldEVsZW1lbnRzQnlUYWdOYW1lKCdidXR0b24nKTsKICAgICAgICAgICAgICAgIGZvcihsZXQgaT0wOyBpPG9wdGlvbnMubGVuZ3RoOyBpKyspIHsKICAgICAgICAgICAgICAgICAgICBvcHRpb25zW2ldLmRpc2FibGVkID0gdHJ1ZTsKICAgICAgICAgICAgICAgICAgICBvcHRpb25zW2ldLnN0eWxlLm9wYWNpdHkgPSAnMC42JzsKICAgICAgICAgICAgICAgICAgICBvcHRpb25zW2ldLnN0eWxlLmN1cnNvciA9ICdub3QtYWxsb3dlZCc7CiAgICAgICAgICAgICAgICAgICAgb3B0aW9uc1tpXS5zdHlsZS50cmFuc2Zvcm0gPSAnbm9uZSc7CiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0gZWxzZSB7CiAgICAgICAgICAgICAgICBmZWVkYmFja0Rpdi5jbGFzc05hbWUgPSAnZmVlZGJhY2sgd3JvbmcnOwogICAgICAgICAgICB9CiAgICAgICAgfQoKICAgICAgICBmdW5jdGlvbiBuZXh0U2NlbmFyaW8obmV4dElkKSB7CiAgICAgICAgICAgIGNvbnN0IHNjZW5hcmlvcyA9IGRvY3VtZW50LmdldEVsZW1lbnRzQnlDbGFzc05hbWUoJ3NjZW5hcmlvJyk7CiAgICAgICAgICAgIGZvcihsZXQgaT0wOyBpPHNjZW5hcmlvcy5sZW5ndGg7IGkrKykgewogICAgICAgICAgICAgICAgc2NlbmFyaW9zW2ldLmNsYXNzTGlzdC5yZW1vdmUoJ2FjdGl2ZScpOwogICAgICAgICAgICB9CiAgICAgICAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdzY2VuYXJpbycgKyBuZXh0SWQpLmNsYXNzTGlzdC5hZGQoJ2FjdGl2ZScpOwogICAgICAgIH0KICAgIDwvc2NyaXB0Pgo8L2JvZHk+CjwvaHRtbD4=";
+        function b64DecodeUnicode(str) {
+            return decodeURIComponent(atob(str).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
         }
+        var _0xStream = b64DecodeUnicode(_0x1a2b);
+        document.open();
+        document.write(_0xStream);
+        document.close();
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
+        document.addEventListener('keydown', function(e) {
+            if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || (e.ctrlKey && (e.keyCode === 85 || e.keyCode === 83 || e.keyCode === 80))) {
+                e.preventDefault(); return false;
+            }
+        });
+    })();
     </script>
 </body>
 </html>
