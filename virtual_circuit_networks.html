@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Virtual Circuit Network | Principle of Communication and Networks</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #ffffff;
+      color: #0f172a;
+    }
+    .font-en {
+      font-family: 'Inter', sans-serif;
+      direction: ltr;
+    }
+    /* Smooth transition for moving packet capsule */
+    #packet-capsule {
+      transition: left 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+                  top 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 0.3s ease,
+                  transform 0.3s ease;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.75); opacity: 0.3; }
+      70% { transform: scale(1.12); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .cell-animate {
+      display: inline-block;
+      animation: popIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes pulseRing {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.35); }
+      50% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+    }
+    .node-highlight {
+      animation: pulseRing 1.8s infinite;
+      border-color: #2563eb !important;
+    }
+    /* Clean custom scrollbar for mobile horizontal scroll */
+    .canvas-scroll::-webkit-scrollbar {
+      height: 7px;
+    }
+    .canvas-scroll::-webkit-scrollbar-track {
+      background: #f8fafc;
+      border-radius: 999px;
+    }
+    .canvas-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+
+  <!-- Academic Header -->
+  <header class="bg-white border-b border-slate-200">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-5 text-center space-y-1.5">
+      <h1 class="font-en text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+        Virtual Circuit Network
+      </h1>
+      <p class="font-en text-sm sm:text-base font-bold text-blue-700">
+        Principle of Communication and Networks
+      </p>
+      <div class="pt-1 flex justify-center">
+        <span class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs sm:text-sm text-slate-700 font-semibold">
+          <span>مدرس المادة:</span>
+          <span class="font-en font-bold text-slate-900">Shada Mohammed Abduladeem</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Interactive Simulation Container -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 space-y-5">
+
+    <!-- 4-Part Phase Navigation Tabs -->
+    <nav aria-label="Simulation Phases" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 bg-slate-50 p-2 rounded-2xl border border-slate-200">
+      <button type="button" id="tab-setup_req" onclick="selectPhase('setup_req')"
+        class="phase-tab text-right px-4 py-3 rounded-xl border-2 transition-all flex items-center justify-between cursor-pointer">
+        <div>
+          <div class="text-[11px] font-bold opacity-75">الجزء الأول (Figure 8.14)</div>
+          <div class="text-sm font-extrabold">طلب الإعداد <span class="font-en text-xs font-semibold">(Setup Request)</span></div>
+        </div>
+        <span class="font-en text-xs font-extrabold px-2 py-1 rounded-lg bg-purple-100 text-purple-800">1A</span>
+      </button>
+
+      <button type="button" id="tab-setup_ack" onclick="selectPhase('setup_ack')"
+        class="phase-tab text-right px-4 py-3 rounded-xl border-2 transition-all flex items-center justify-between cursor-pointer">
+        <div>
+          <div class="text-[11px] font-bold opacity-75">الجزء الثاني (Figure 8.15)</div>
+          <div class="text-sm font-extrabold">تأكيد الإعداد <span class="font-en text-xs font-semibold">(Acknowledgment)</span></div>
+        </div>
+        <span class="font-en text-xs font-extrabold px-2 py-1 rounded-lg bg-emerald-100 text-emerald-800">1B</span>
+      </button>
+
+      <button type="button" id="tab-data" onclick="selectPhase('data')"
+        class="phase-tab text-right px-4 py-3 rounded-xl border-2 transition-all flex items-center justify-between cursor-pointer">
+        <div>
+          <div class="text-[11px] font-bold opacity-75">الجزء الثالث (Figure 8.13)</div>
+          <div class="text-sm font-extrabold">نقل البيانات <span class="font-en text-xs font-semibold">(Data Transfer)</span></div>
+        </div>
+        <span class="font-en text-xs font-extrabold px-2 py-1 rounded-lg bg-blue-100 text-blue-800">2</span>
+      </button>
+
+      <button type="button" id="tab-teardown" onclick="selectPhase('teardown')"
+        class="phase-tab text-right px-4 py-3 rounded-xl border-2 transition-all flex items-center justify-between cursor-pointer">
+        <div>
+          <div class="text-[11px] font-bold opacity-75">الجزء الرابع (Teardown Phase)</div>
+          <div class="text-sm font-extrabold">إنهاء الاتصال <span class="font-en text-xs font-semibold">(Teardown)</span></div>
+        </div>
+        <span class="font-en text-xs font-extrabold px-2 py-1 rounded-lg bg-rose-100 text-rose-800">3</span>
+      </button>
+    </nav>
+
+    <!-- Step Explanation Card + Prominent Colorful Next Step Button -->
+    <section id="action-banner" class="rounded-2xl border-2 p-4 sm:p-5 transition-colors shadow-sm">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+
+        <!-- Left/Right Arabic & English Explanation -->
+        <div class="flex items-start gap-3.5 flex-1">
+          <div id="step-badge-circle" class="w-11 h-11 rounded-xl text-white font-en font-extrabold text-base flex items-center justify-center shrink-0 shadow-sm">
+            0
+          </div>
+          <div class="space-y-1.5 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <span id="phase-pill" class="px-2.5 py-0.5 rounded-full text-xs font-en font-bold">
+                Phase 1A: Setup Request
+              </span>
+              <span id="step-counter-text" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-white border border-slate-200 text-slate-700">
+                البداية (خطوة 0 من 5)
+              </span>
+            </div>
+            <h2 id="step-heading" class="text-base sm:text-lg font-extrabold text-slate-900">
+              جاهز لبدء مرحلة طلب الإعداد (Setup Request)
+            </h2>
+            <p id="step-body" class="text-sm sm:text-[15px] text-slate-700 leading-relaxed">
+              اضغط على الزر الملون <b>"الخطوة التالية"</b> لمشاهدة كيف يرسل المصدر <span class="font-en font-bold">A</span> طلب إنشاء دائرة افتراضية وتعبئة أول 3 أعمدة في جداول المحولات.
+            </p>
+          </div>
+        </div>
+
+        <!-- Prominent Colorful Action Buttons -->
+        <div class="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0">
+          <!-- Extra Data Frame Button (Visible only when Data Transfer finishes) -->
+          <button type="button" id="btn-extra-frame" onclick="sendAnotherFrame()"
+            class="hidden px-4 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-sm shadow-md transition active:scale-95 cursor-pointer">
+            إرسال إطار بيانات آخر (Frame 2)
+          </button>
+
+          <!-- Primary Colorful Next Step Button -->
+          <button type="button" id="btn-next-step" onclick="nextStep()"
+            class="flex-1 sm:flex-initial px-6 py-3.5 rounded-xl text-white font-extrabold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg transition transform active:scale-95 cursor-pointer">
+            <span id="btn-next-label">الخطوة التالية</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          <!-- Clean Reset Current Phase Button -->
+          <button type="button" onclick="resetCurrentPhase()" title="إعادة هذا الجزء من البداية"
+            class="px-3.5 py-3.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>إعادة</span>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Network Topology & Switch Tables Canvas (LTR inside to match textbook Figures 8.13 - 8.15) -->
+    <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-3 sm:p-5">
+      <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-100 text-xs text-slate-500">
+        <span class="font-bold text-slate-700">مخطط الشبكة وجداول التوجيه (Virtual-Circuit Topology &amp; Switch Tables)</span>
+        <span id="connection-status-pill" class="font-en font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
+          Status: Idle (No Circuit)
+        </span>
+      </div>
+
+      <!-- Horizontal scroll wrapper for small mobile screens; fixed coordinate plane inside (960x480) -->
+      <div class="canvas-scroll overflow-x-auto pb-2">
+        <div dir="ltr" class="relative w-[960px] h-[480px] mx-auto bg-slate-50/60 rounded-xl border border-slate-200 select-none overflow-hidden">
+
+          <!-- Subtle WAN Cloud Boundary -->
+          <div class="absolute left-[220px] top-[115px] w-[520px] h-[250px] rounded-2xl border-2 border-dashed border-slate-300 bg-white/50 pointer-events-none">
+            <span class="absolute bottom-2 left-3 font-en text-[11px] font-bold tracking-wider text-slate-400 uppercase">WAN (Virtual-Circuit Network)</span>
+          </div>
+
+          <!-- SVG Links & Port Numbers -->
+          <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 960 480">
+            <!-- Link A (125,190) -> Switch 1 (290,190) -->
+            <line id="seg-a-s1" x1="125" y1="190" x2="290" y2="190" stroke="#94a3b8" stroke-width="4" stroke-linecap="round" />
+            <!-- Link Switch 1 (290,190) -> Switch 2 (480,310) -->
+            <line id="seg-s1-s2" x1="290" y1="190" x2="480" y2="310" stroke="#94a3b8" stroke-width="4" stroke-linecap="round" />
+            <!-- Link Switch 2 (480,310) -> Switch 3 (670,190) -->
+            <line id="seg-s2-s3" x1="480" y1="310" x2="670" y2="190" stroke="#94a3b8" stroke-width="4" stroke-linecap="round" />
+            <!-- Link Switch 3 (670,190) -> B (835,190) -->
+            <line id="seg-s3-b" x1="670" y1="190" x2="835" y2="190" stroke="#94a3b8" stroke-width="4" stroke-linecap="round" />
+
+            <!-- Port Labels (Exact Textbook Numbers) -->
+            <!-- Switch 1 Ports: Port 1 (left), Port 3 (bottom-right) -->
+            <circle cx="242" cy="174" r="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+            <text x="242" y="178" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#334155">1</text>
+
+            <circle cx="338" cy="204" r="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+            <text x="338" y="208" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#334155">3</text>
+
+            <!-- Switch 2 Ports: Port 1 (top-left), Port 2 (top-right) -->
+            <circle cx="432" cy="296" r="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+            <text x="432" y="300" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#334155">1</text>
+
+            <circle cx="528" cy="296" r="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+            <text x="528" y="300" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#334155">2</text>
+
+            <!-- Switch 3 Ports: Port 2 (bottom-left), Port 3 (right) -->
+            <circle cx="622" cy="204" r="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+            <text x="622" y="208" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#334155">2</text>
+
+            <circle cx="718" cy="174" r="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+            <text x="718" y="178" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#334155">3</text>
+          </svg>
+
+          <!-- ==================== SWITCH 1 TABLE (Top Left: x=170, y=14, w=240) ==================== -->
+          <div id="card-table-s1" class="absolute left-[170px] top-[14px] w-[240px] bg-white rounded-xl border-2 border-slate-300 shadow-sm overflow-hidden transition-all z-10">
+            <div class="bg-slate-800 text-white px-2.5 py-1 flex items-center justify-between font-en text-[11px] font-bold">
+              <span>Switch 1 Table</span>
+              <span id="badge-table-s1" class="px-1.5 py-0.5 rounded text-[10px] bg-slate-700 text-slate-300">Empty</span>
+            </div>
+            <table class="w-full text-center font-en text-[11px] border-collapse">
+              <thead>
+                <tr class="bg-sky-100 text-slate-800 font-bold border-b border-slate-300">
+                  <th colspan="2" class="py-0.5 border-r border-slate-300">Incoming</th>
+                  <th colspan="2" class="py-0.5">Outgoing</th>
+                </tr>
+                <tr class="bg-slate-100 text-slate-600 font-semibold border-b border-slate-300 text-[10px]">
+                  <th class="py-0.5 border-r border-slate-200 w-1/4">Port</th>
+                  <th class="py-0.5 border-r border-slate-300 w-1/4">VCI</th>
+                  <th class="py-0.5 border-r border-slate-200 w-1/4">Port</th>
+                  <th class="py-0.5 w-1/4">VCI</th>
+                </tr>
+              </thead>
+              <tbody id="body-table-s1">
+                <tr class="text-slate-400"><td colspan="4" class="py-2 italic">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- ==================== SWITCH 3 TABLE (Top Right: x=550, y=14, w=240) ==================== -->
+          <div id="card-table-s3" class="absolute left-[550px] top-[14px] w-[240px] bg-white rounded-xl border-2 border-slate-300 shadow-sm overflow-hidden transition-all z-10">
+            <div class="bg-slate-800 text-white px-2.5 py-1 flex items-center justify-between font-en text-[11px] font-bold">
+              <span>Switch 3 Table</span>
+              <span id="badge-table-s3" class="px-1.5 py-0.5 rounded text-[10px] bg-slate-700 text-slate-300">Empty</span>
+            </div>
+            <table class="w-full text-center font-en text-[11px] border-collapse">
+              <thead>
+                <tr class="bg-sky-100 text-slate-800 font-bold border-b border-slate-300">
+                  <th colspan="2" class="py-0.5 border-r border-slate-300">Incoming</th>
+                  <th colspan="2" class="py-0.5">Outgoing</th>
+                </tr>
+                <tr class="bg-slate-100 text-slate-600 font-semibold border-b border-slate-300 text-[10px]">
+                  <th class="py-0.5 border-r border-slate-200 w-1/4">Port</th>
+                  <th class="py-0.5 border-r border-slate-300 w-1/4">VCI</th>
+                  <th class="py-0.5 border-r border-slate-200 w-1/4">Port</th>
+                  <th class="py-0.5 w-1/4">VCI</th>
+                </tr>
+              </thead>
+              <tbody id="body-table-s3">
+                <tr class="text-slate-400"><td colspan="4" class="py-2 italic">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- ==================== SWITCH 2 TABLE (Bottom Center: x=360, y=365, w=240) ==================== -->
+          <div id="card-table-s2" class="absolute left-[360px] top-[365px] w-[240px] bg-white rounded-xl border-2 border-slate-300 shadow-sm overflow-hidden transition-all z-10">
+            <div class="bg-slate-800 text-white px-2.5 py-1 flex items-center justify-between font-en text-[11px] font-bold">
+              <span>Switch 2 Table</span>
+              <span id="badge-table-s2" class="px-1.5 py-0.5 rounded text-[10px] bg-slate-700 text-slate-300">Empty</span>
+            </div>
+            <table class="w-full text-center font-en text-[11px] border-collapse">
+              <thead>
+                <tr class="bg-sky-100 text-slate-800 font-bold border-b border-slate-300">
+                  <th colspan="2" class="py-0.5 border-r border-slate-300">Incoming</th>
+                  <th colspan="2" class="py-0.5">Outgoing</th>
+                </tr>
+                <tr class="bg-slate-100 text-slate-600 font-semibold border-b border-slate-300 text-[10px]">
+                  <th class="py-0.5 border-r border-slate-200 w-1/4">Port</th>
+                  <th class="py-0.5 border-r border-slate-300 w-1/4">VCI</th>
+                  <th class="py-0.5 border-r border-slate-200 w-1/4">Port</th>
+                  <th class="py-0.5 w-1/4">VCI</th>
+                </tr>
+              </thead>
+              <tbody id="body-table-s2">
+                <tr class="text-slate-400"><td colspan="4" class="py-2 italic">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- ==================== NODES ==================== -->
+          <!-- Source A (Center at x=95, y=190) -->
+          <div class="absolute left-[50px] top-[132px] w-[90px] flex flex-col items-center z-10">
+            <span id="host-vci-a" class="mb-1.5 px-2.5 py-0.5 rounded-full font-en text-[11px] font-extrabold bg-slate-200 text-slate-600 transition-all">
+              VCI: —
+            </span>
+            <div id="box-node-a" class="w-16 h-16 rounded-2xl bg-white border-2 border-slate-400 shadow-md flex flex-col items-center justify-center transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <span class="mt-1.5 font-en text-xs font-extrabold text-slate-800">Source A</span>
+          </div>
+
+          <!-- Switch 1 (Center at x=290, y=190) -->
+          <div class="absolute left-[250px] top-[162px] w-[80px] flex flex-col items-center z-10">
+            <div id="box-node-s1" class="w-16 h-14 rounded-xl bg-sky-500 border-2 border-sky-700 shadow-md flex items-center justify-center text-white transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+            </div>
+            <span class="mt-1 font-en text-xs font-extrabold text-slate-800">Switch 1</span>
+          </div>
+
+          <!-- Switch 2 (Center at x=480, y=310) -->
+          <div class="absolute left-[440px] top-[282px] w-[80px] flex flex-col items-center z-10">
+            <div id="box-node-s2" class="w-16 h-14 rounded-xl bg-sky-500 border-2 border-sky-700 shadow-md flex items-center justify-center text-white transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+            </div>
+            <span class="mt-1 font-en text-xs font-extrabold text-slate-800">Switch 2</span>
+          </div>
+
+          <!-- Switch 3 (Center at x=670, y=190) -->
+          <div class="absolute left-[630px] top-[162px] w-[80px] flex flex-col items-center z-10">
+            <div id="box-node-s3" class="w-16 h-14 rounded-xl bg-sky-500 border-2 border-sky-700 shadow-md flex items-center justify-center text-white transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+            </div>
+            <span class="mt-1 font-en text-xs font-extrabold text-slate-800">Switch 3</span>
+          </div>
+
+          <!-- Destination B (Center at x=865, y=190) -->
+          <div class="absolute left-[820px] top-[132px] w-[90px] flex flex-col items-center z-10">
+            <span id="host-vci-b" class="mb-1.5 px-2.5 py-0.5 rounded-full font-en text-[11px] font-extrabold bg-slate-200 text-slate-600 transition-all">
+              VCI: —
+            </span>
+            <div id="box-node-b" class="w-16 h-16 rounded-2xl bg-white border-2 border-slate-400 shadow-md flex flex-col items-center justify-center transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <span class="mt-1.5 font-en text-xs font-extrabold text-slate-800">Destination B</span>
+          </div>
+
+          <!-- ==================== MOVING ANIMATED FRAME CAPSULE ==================== -->
+          <div id="packet-capsule" style="left: 95px; top: 190px; opacity: 0;"
+            class="absolute -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+            <div class="flex items-center rounded-lg overflow-hidden shadow-xl border-2 border-slate-900 bg-white font-en text-xs font-extrabold whitespace-nowrap">
+              <span id="pkt-payload" class="px-2.5 py-1 bg-white text-slate-900">Data</span>
+              <span id="pkt-header" class="px-2.5 py-1 bg-blue-600 text-white">14</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Minimal Clean Academic Footer -->
+  <footer class="bg-slate-50 border-t border-slate-200 py-4 mt-6">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-600">
+      <div class="font-en font-bold text-slate-800">
+        Virtual Circuit Network — Principle of Communication and Networks
+      </div>
+      <div>
+        مدرس المادة: <span class="font-en font-bold text-slate-900">Shada Mohammed Abduladeem</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Simulation State Machine & Logic -->
+  <script>
+    // Exact pixel coordinates matching the 960x480 topology canvas
+    const COORDS = {
+      HOST_A:   { x: 95,  y: 190 },
+      LINK_A_1: { x: 192, y: 190 },
+      SW_1:     { x: 290, y: 190 },
+      LINK_1_2: { x: 385, y: 250 },
+      SW_2:     { x: 480, y: 310 },
+      LINK_2_3: { x: 575, y: 250 },
+      SW_3:     { x: 670, y: 190 },
+      LINK_3_B: { x: 767, y: 190 },
+      HOST_B:   { x: 865, y: 190 }
+    };
+
+    let currentPhase = 'setup_req';
+    let currentStep = 0;
+    let frameIndex = 1;
+
+    // Color themes for each of the 4 parts
+    const PHASE_THEMES = {
+      setup_req: {
+        pillText: 'Phase 1A: Setup Request (Figure 8.14)',
+        bannerBg: 'bg-purple-50/70 border-purple-200',
+        circleBg: 'bg-purple-600',
+        pillBg: 'bg-purple-100 text-purple-800',
+        btnBg: 'bg-purple-600 hover:bg-purple-700 shadow-purple-600/25',
+        nextPhase: 'setup_ack',
+        nextPhaseBtnText: 'الانتقال إلى تأكيد الإعداد (1B)'
+      },
+      setup_ack: {
+        pillText: 'Phase 1B: Acknowledgment (Figure 8.15)',
+        bannerBg: 'bg-emerald-50/70 border-emerald-200',
+        circleBg: 'bg-emerald-600',
+        pillBg: 'bg-emerald-100 text-emerald-800',
+        btnBg: 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/25',
+        nextPhase: 'data',
+        nextPhaseBtnText: 'الانتقال إلى نقل البيانات (Phase 2)'
+      },
+      data: {
+        pillText: 'Phase 2: Data Transfer & VCI Swap (Figure 8.13)',
+        bannerBg: 'bg-blue-50/70 border-blue-200',
+        circleBg: 'bg-blue-600',
+        pillBg: 'bg-blue-100 text-blue-800',
+        btnBg: 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/25',
+        nextPhase: 'teardown',
+        nextPhaseBtnText: 'الانتقال إلى إنهاء الاتصال (Phase 3)'
+      },
+      teardown: {
+        pillText: 'Phase 3: Teardown (Connection Termination)',
+        bannerBg: 'bg-rose-50/70 border-rose-200',
+        circleBg: 'bg-rose-600',
+        pillBg: 'bg-rose-100 text-rose-800',
+        btnBg: 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/25',
+        nextPhase: 'setup_req',
+        nextPhaseBtnText: 'إعادة المحاكاة من البداية'
+      }
+    };
+
+    // Build steps dynamically for the selected phase
+    function getStepsForPhase(phase) {
+      if (phase === 'setup_req') {
+        return [
+          {
+            badge: '0',
+            heading: 'البداية: الشبكة جاهزة لإعداد الدائرة الافتراضية (Setup Request)',
+            body: 'جميع جداول التوجيه في المحولات فارغة حالياً. اضغط على <b>"الخطوة التالية"</b> ليرسل المصدر <span class="font-en font-bold">A</span> إطار طلب الإعداد نحو الوجهة <span class="font-en font-bold">B</span>.',
+            status: 'Status: Ready for Setup Request',
+            pkt: { visible: false, pos: COORDS.HOST_A, payload: 'Setup Req', header: 'A → B', color: 'bg-purple-600' },
+            activeNode: 'box-node-a',
+            activeLink: null,
+            vciA: 'VCI: —',
+            vciB: 'VCI: —',
+            tables: { s1: null, s2: null, s3: null }
+          },
+          {
+            badge: 'a',
+            heading: 'الخطوة (a): إرسال إطار طلب الإعداد من Source A إلى Switch 1',
+            body: 'يرسل الجهاز <span class="font-en font-bold">Source A</span> إطار طلب الإعداد (<span class="font-en font-semibold text-purple-700">Setup Request Frame</span>) حاملاً العنوانين العامين للمصدر والوجهة (<span class="font-en font-bold">Global Addresses A &amp; B</span>) نحو المحول الأول <span class="font-en font-bold">Switch 1</span>.',
+            status: 'Status: Setup Request in Progress...',
+            pkt: { visible: true, pos: COORDS.LINK_A_1, payload: 'Setup Req', header: 'Src: A, Dst: B', color: 'bg-purple-600' },
+            activeNode: 'box-node-a',
+            activeLink: 'seg-a-s1',
+            vciA: 'VCI: —',
+            vciB: 'VCI: —',
+            tables: { s1: null, s2: null, s3: null }
+          },
+          {
+            badge: 'b',
+            heading: 'الخطوة (b): المحول Switch 1 يملأ 3 أعمدة من جدوله ويمرر الإطار',
+            body: 'يستقبل <span class="font-en font-bold">Switch 1</span> الطلب على المنفذ <span class="font-en font-bold">Port 1</span> ويختار رقماً متاحاً <span class="font-en font-bold text-blue-700">VCI = 14</span>، ويحدد منفذ الخروج <span class="font-en font-bold">Port 3</span>، بينما يترك العمود الرابع (<span class="font-en font-bold">Outgoing VCI</span>) فارغاً <span class="font-en font-bold text-amber-700">(?)</span> لحين وصول التأكيد، ثم يمرر الإطار إلى <span class="font-en font-bold">Switch 2</span>.',
+            status: 'Status: Switch 1 Entry Created (3/4 Columns)',
+            pkt: { visible: true, pos: COORDS.LINK_1_2, payload: 'Setup Req', header: 'Src: A, Dst: B', color: 'bg-purple-600' },
+            activeNode: 'box-node-s1',
+            activeLink: 'seg-s1-s2',
+            vciA: 'VCI: —',
+            vciB: 'VCI: —',
+            tables: {
+              s1: { inP: '1', inV: '14', outP: '3', outV: '?', state: 'pop3' },
+              s2: null,
+              s3: null
+            }
+          },
+          {
+            badge: 'c',
+            heading: 'الخطوة (c): المحول Switch 2 يملأ 3 أعمدة من جدوله ويمرر الإطار',
+            body: 'يستقبل <span class="font-en font-bold">Switch 2</span> الإطار على <span class="font-en font-bold">Port 1</span>، ويسجل <span class="font-en font-bold text-blue-700">Incoming VCI = 66</span> ومنفذ الخروج <span class="font-en font-bold">Port 2</span>، ويبقي العمود الرابع <span class="font-en font-bold text-amber-700">(?)</span> بانتظار التأكيد، ثم يمرر الإطار إلى <span class="font-en font-bold">Switch 3</span>.',
+            status: 'Status: Switch 2 Entry Created (3/4 Columns)',
+            pkt: { visible: true, pos: COORDS.LINK_2_3, payload: 'Setup Req', header: 'Src: A, Dst: B', color: 'bg-purple-600' },
+            activeNode: 'box-node-s2',
+            activeLink: 'seg-s2-s3',
+            vciA: 'VCI: —',
+            vciB: 'VCI: —',
+            tables: {
+              s1: { inP: '1', inV: '14', outP: '3', outV: '?', state: 'normal' },
+              s2: { inP: '1', inV: '66', outP: '2', outV: '?', state: 'pop3' },
+              s3: null
+            }
+          },
+          {
+            badge: 'd',
+            heading: 'الخطوة (d): المحول Switch 3 يملأ 3 أعمدة ويمرر الإطار إلى الوجهة B',
+            body: 'يسجل <span class="font-en font-bold">Switch 3</span> منفذ الدخول <span class="font-en font-bold">Port 2</span>، ورقم <span class="font-en font-bold text-blue-700">Incoming VCI = 22</span>، ومنفذ الخروج <span class="font-en font-bold">Port 3</span>، ثم يرسل إطار طلب الإعداد إلى الجهاز المستلم <span class="font-en font-bold">Destination B</span>.',
+            status: 'Status: Switch 3 Entry Created (3/4 Columns)',
+            pkt: { visible: true, pos: COORDS.LINK_3_B, payload: 'Setup Req', header: 'Src: A, Dst: B', color: 'bg-purple-600' },
+            activeNode: 'box-node-s3',
+            activeLink: 'seg-s3-b',
+            vciA: 'VCI: —',
+            vciB: 'VCI: —',
+            tables: {
+              s1: { inP: '1', inV: '14', outP: '3', outV: '?', state: 'normal' },
+              s2: { inP: '1', inV: '66', outP: '2', outV: '?', state: 'normal' },
+              s3: { inP: '2', inV: '22', outP: '3', outV: '?', state: 'pop3' }
+            }
+          },
+          {
+            badge: 'e',
+            heading: 'الخطوة (e): استلام الطلب عند Destination B وتعيين VCI = 77',
+            body: 'يستقبل <span class="font-en font-bold">Destination B</span> إطار الإعداد ويوافق على الاتصال، فيقوم بتعيين <span class="font-en font-bold text-emerald-700">VCI = 77</span> لتمييز الإطارات القادمة من المصدر <span class="font-en font-bold">A</span>.',
+            status: 'Status: Setup Request Completed (B assigned VCI = 77)',
+            pkt: { visible: true, pos: COORDS.HOST_B, payload: 'Accepted', header: 'VCI = 77', color: 'bg-emerald-600' },
+            activeNode: 'box-node-b',
+            activeLink: null,
+            vciA: 'VCI: —',
+            vciB: 'VCI = 77',
+            tables: {
+              s1: { inP: '1', inV: '14', outP: '3', outV: '?', state: 'normal' },
+              s2: { inP: '1', inV: '66', outP: '2', outV: '?', state: 'normal' },
+              s3: { inP: '2', inV: '22', outP: '3', outV: '?', state: 'normal' }
+            }
+          }
+        ];
+      }
+
+      if (phase === 'setup_ack') {
+        return [
+          {
+            badge: '0',
+            heading: 'البداية: مرحلة تأكيد الإعداد (Setup Acknowledgment - Figure 8.15)',
+            body: 'الآن كل محول لديه 3 أعمدة مكتملة وينتظر العمود الرابع (<span class="font-en font-bold">Outgoing VCI</span>). اضغط <b>"الخطوة التالية"</b> ليرسل <span class="font-en font-bold">Destination B</span> إطار التأكيد في الاتجاه المعاكس.',
+            status: 'Status: Waiting for Acknowledgment from B',
+            pkt: { visible: false, pos: COORDS.HOST_B, payload: 'ACK', header: '77', color: 'bg-emerald-600' },
+            activeNode: 'box-node-b',
+            activeLink: null,
+            vciA: 'VCI: —',
+            vciB: 'VCI = 77',
+            tables: {
+              s1: { inP: '1', inV: '14', outP: '3', outV: '?', state: 'normal' },
+              s2: { inP: '1', inV: '66', outP: '2', outV: '?', state: 'normal' },
+              s3: { inP: '2', inV: '22', outP: '3', outV: '?', state: 'normal' }
+            }
+          },
+          {
+            badge: 'a',
+            heading: 'الخطوة (a): إرسال ACK من B إلى Switch 3 وإكمال عموده الرابع (77)',
+            body: 'يرسل <span class="font-en font-bold">Destination B</span> إطار التأكيد حاملاً <span class="font-en font-bold text-emerald-700">VCI = 77</span> إلى <span class="font-en font-bold">Switch 3</span>، فيستخدمه المحول لإكمال عمود <span class="font-en font-bold">Outgoing VCI = 77</span>.',
+            status: 'Status: Switch 3 Table Completed (Outgoing VCI = 77)',
+            pkt: { visible: true, pos: COORDS.LINK_3_B, payload: 'ACK', header: 'VCI: 77', color: 'bg-emerald-600' },
+            activeNode: 'box-node-s3',
+            activeLink: 'seg-s3-b',
+            vciA: 'VCI: —',
+            vciB: 'VCI = 77',
+            tables: {
+              s1: { inP: '1', inV: '14', outP: '3', outV: '?', state: 'normal' },
+              s2: { inP: '1', inV: '66', outP: '2', outV: '?', state: 'normal' },
+              s3: { inP: '2', inV: '22', outP: '3', outV: '77', state: 'pop4' }
+            }
+          },
+          {
+            badge: 'b',
+            heading: 'الخطوة (b): إرسال ACK من Switch 3 إلى Switch 2 وإكمال عموده الرابع (22)',
+            body: 'يرسل <span class="font-en font-bold">Switch 3</span> إطار التأكيد حاملاً رقم دخوله (<span class="font-en font-bold text-emerald-700">VCI = 22</span>) إلى <span class="font-en font-bold">Switch 2</span>، فيسجله <span class="font-en font-bold">Switch 2</span> كـ <span class="font-en font-bold">Outgoing VCI = 22</span>.',
+            status: 'Status: Switch 2 Table Completed (Outgoing VCI = 22)',
+            pkt: { visible: true, pos: COORDS.LINK_2_3, payload: 'ACK', header: 'VCI: 22', color: 'bg-emerald-600' },
+            activeNode: 'box-node-s2',
+            activeLink: 'seg-s2-s3',
+            vciA: 'VCI: —',
+            vciB: 'VCI = 77',
+            tables: {
+              s1: { inP: '1', inV: '14', outP: '3', outV: '?', state: 'normal' },
+              s2: { inP: '1', inV: '66', outP: '2', outV: '22', state: 'pop4' },
+              s3: { inP: '2', inV: '22', outP: '3', outV: '77', state: 'normal' }
+            }
+          },
+          {
+            badge: 'c',
+            heading: 'الخطوة (c): إرسال ACK من Switch 2 إلى Switch 1 وإكمال عموده الرابع (66)',
+            body: 'يرسل <span class="font-en font-bold">Switch 2</span> إطار التأكيد حاملاً رقم دخوله (<span class="font-en font-bold text-emerald-700">VCI = 66</span>) إلى <span class="font-en font-bold">Switch 1</span>، فيكمل <span class="font-en font-bold">Switch 1</span> عموده الرابع بـ <span class="font-en font-bold">Outgoing VCI = 66</span>.',
+            status: 'Status: Switch 1 Table Completed (Outgoing VCI = 66)',
+            pkt: { visible: true, pos: COORDS.LINK_1_2, payload: 'ACK', header: 'VCI: 66', color: 'bg-emerald-600' },
+            activeNode: 'box-node-s1',
+            activeLink: 'seg-s1-s2',
+            vciA: 'VCI: —',
+            vciB: 'VCI = 77',
+            tables: {
+              s1: { inP: '1', inV: '14', outP: '3', outV: '66', state: 'pop4' },
+              s2: { inP: '1', inV: '66', outP: '2', outV: '22', state: 'normal' },
+              s3: { inP: '2', inV: '22', outP: '3', outV: '77', state: 'normal' }
+            }
+          },
+          {
+            badge: 'd',
+            heading: 'الخطوة (d): إرسال ACK من Switch 1 إلى المصدر Source A حاملاً VCI = 14',
+            body: 'أخيراً، يرسل <span class="font-en font-bold">Switch 1</span> إطار التأكيد إلى <span class="font-en font-bold">Source A</span> متضمناً رقم <span class="font-en font-bold text-blue-700">VCI = 14</span>.',
+            status: 'Status: Delivering Final ACK (VCI = 14) to Source A',
+            pkt: { visible: true, pos: COORDS.LINK_A_1, payload: 'ACK', header: 'VCI: 14', color: 'bg-emerald-600' },
+            activeNode: 'box-node-a',
+            activeLink: 'seg-a-s1',
+            vciA: 'VCI: —',
+            vciB: 'VCI = 77',
+            tables: {
+              s1: { inP: '1', inV: '14', outP: '3', outV: '66', state: 'normal' },
+              s2: { inP: '1', inV: '66', outP: '2', outV: '22', state: 'normal' },
+              s3: { inP: '2', inV: '22', outP: '3', outV: '77', state: 'normal' }
+            }
+          },
+          {
+            badge: 'e',
+            heading: 'الخطوة (e): تخزين VCI = 14 لدى Source A واكتمال الدائرة الافتراضية!',
+            body: 'يحفظ <span class="font-en font-bold">Source A</span> الرقم <span class="font-en font-bold text-blue-700">VCI = 14</span> لاستخدامه في تغليف جميع إطارات البيانات المرسلة إلى <span class="font-en font-bold">B</span>. الدائرة الافتراضية الآن جاهزة بالكامل!',
+            status: 'Status: Virtual Circuit Established (Active)',
+            pkt: { visible: true, pos: COORDS.HOST_A, payload: 'Ready', header: 'VCI = 14', color: 'bg-blue-600' },
+            activeNode: 'box-node-a',
+            activeLink: null,
+            vciA: 'VCI = 14',
+            vciB: 'VCI = 77',
+            tables: {
+              s1: { inP: '1', inV: '14', outP: '3', outV: '66', state: 'normal' },
+              s2: { inP: '1', inV: '66', outP: '2', outV: '22', state: 'normal' },
+              s3: { inP: '2', inV: '22', outP: '3', outV: '77', state: 'normal' }
+            }
+          }
+        ];
+      }
+
+      if (phase === 'data') {
+        const label = `Data #${frameIndex}`;
+        return [
+          {
+            badge: '0',
+            heading: `البداية: مرحلة نقل البيانات وتغليف الإطار (${label} - Figure 8.13)`,
+            body: 'اكتملت جميع الجداول في المحولات الثلاثة. اضغط <b>"الخطوة التالية"</b> لمشاهدة كيف يتم تغليف البيانات برقم <span class="font-en font-bold">VCI</span> وتبديل قيمته عند كل محول (<span class="font-en font-bold">14 ➔ 66 ➔ 22 ➔ 77</span>).',
+            status: 'Status: Virtual Circuit Active (Ready to Send Data)',
+            pkt: { visible: false, pos: COORDS.HOST_A, payload: label, header: '14', color: 'bg-blue-600' },
+            activeNode: 'box-node-a',
+            activeLink: null,
+            vciA: 'VCI = 14',
+            vciB: 'VCI = 77',
+            tables: {
+              s1: { inP: '1', inV: '14', outP: '3', outV: '66', state: 'normal' },
+              s2: { inP: '1', inV: '66', outP: '2', outV: '22', state: 'normal' },
+              s3: { inP: '2', inV: '22', outP: '3', outV: '77', state: 'normal' }
+            }
+          },
+          {
+            badge: '1',
+            heading: `الخطوة (1): تغليف البيانات في Source A وإرسال [${label} | 14]`,
+            body: `يقوم <span class="font-en font-bold">Source A</span> بتغليف البيانات وإضافة ترويسة <span class="font-en font-bold text-blue-700">VCI = 14</span>، ثم يرسل الإطار إلى <span class="font-en font-bold">Switch 1</span> عبر المنفذ <span class="font-en font-bold">Port 1</span>.`,
+            status: `Status: Transmitting ${label} with VCI = 14`,
+            pkt: { visible: true, pos: COORDS.LINK_A_1, payload: label, header: 'VCI: 14', color: 'bg-blue-600' },
+            activeNode: 'box-node-a',
+            activeLink: 'seg-a-s1',
+            vciA: 'VCI = 14',
+            vciB: 'VCI = 77',
+            tables: {
+              s1: { inP: '1', inV: '14', outP: '3', outV: '66', state: 'normal' },
+              s2: { inP: '1', inV: '66', outP: '2', outV: '22', state: 'normal' },
+              s3: { inP: '2', inV: '22', outP: '3', outV: '77', state: 'normal' }
+            }
+          },
+          {
+            badge: '2',
+            heading: 'الخطوة (2): تبديل العنوان في Switch 1 من 14 إلى 66 وإرساله عبر Port 3',
+            body: 'يبحث <span class="font-en font-bold">Switch 1</span> في جدوله عن <span class="font-en font-bold">(Port 1, VCI 14)</span>، فيستبدل رقم <span class="font-en font-bold">VCI</span> من <span class="font-en font-bold">14</span> إلى <span class="font-en font-bold text-indigo-700">66</span> ويوجه الإطار عبر <span class="font-en font-bold">Port 3</span> نحو <span class="font-en font-bold">Switch 2</span>.',
+            status: 'Status: Switch 1 Swapped VCI (14 → 66)',
+            pkt: { visible: true, pos: COORDS.LINK_1_2, payload: label, header: 'VCI: 66', color: 'bg-indigo-600' },
+            activeNode: 'box-node-s1',
+            activeLink: 'seg-s1-s2',
+            vciA: 'VCI = 14',
+            vciB: 'VCI = 77',
+            tables: {
+              s1: { inP: '1', inV: '14', outP: '3', outV: '66', state: 'lookup' },
+              s2: { inP: '1', inV: '66', outP: '2', outV: '22', state: 'normal' },
+              s3: { inP: '2', inV: '22', outP: '3', outV: '77', state: 'normal' }
+            }
+          },
+          {
+            badge: '3',
+            heading: 'الخطوة (3): تبديل العنوان في Switch 2 من 66 إلى 22 وإرساله عبر Port 2',
+            body: 'يبحث <span class="font-en font-bold">Switch 2</span> في جدوله عن <span class="font-en font-bold">(Port 1, VCI 66)</span>، فيستبدل رقم <span class="font-en font-bold">VCI</span> من <span class="font-en font-bold">66</span> إلى <span class="font-en font-bold text-teal-700">22</span> ويوجه الإطار عبر <span class="font-en font-bold">Port 2</span> نحو <span class="font-en font-bold">Switch 3</span>.',
+            status: 'Status: Switch 2 Swapped VCI (66 → 22)',
+            pkt: { visible: true, pos: COORDS.LINK_2_3, payload: label, header: 'VCI: 22', color: 'bg-teal-600' },
+            activeNode: 'box-node-s2',
+            activeLink: 'seg-s2-s3',
+            vciA: 'VCI = 14',
+            vciB: 'VCI = 77',
+            tables: {
+              s1: { inP: '1', inV: '14', outP: '3', outV: '66', state: 'normal' },
+              s2: { inP: '1', inV: '66', outP: '2', outV: '22', state: 'lookup' },
+              s3: { inP: '2', inV: '22', outP: '3', outV: '77', state: 'normal' }
+            }
+          },
+          {
+            badge: '4',
+            heading: 'الخطوة (4): تبديل العنوان في Switch 3 من 22 إلى 77 وإرساله إلى B',
+            body: 'يبحث <span class="font-en font-bold">Switch 3</span> في جدوله عن <span class="font-en font-bold">(Port 2, VCI 22)</span>، فيستبدل رقم <span class="font-en font-bold">VCI</span> من <span class="font-en font-bold">22</span> إلى <span class="font-en font-bold text-emerald-700">77</span> ويرسل الإطار عبر <span class="font-en font-bold">Port 3</span> نحو <span class="font-en font-bold">Destination B</span>.',
+            status: 'Status: Switch 3 Swapped VCI (22 → 77)',
+            pkt: { visible: true, pos: COORDS.LINK_3_B, payload: label, header: 'VCI: 77', color: 'bg-emerald-600' },
+            activeNode: 'box-node-s3',
+            activeLink: 'seg-s3-b',
+            vciA: 'VCI = 14',
+            vciB: 'VCI = 77',
+            tables: {
+              s1: { inP: '1', inV: '14', outP: '3', outV: '66', state: 'normal' },
+              s2: { inP: '1', inV: '66', outP: '2', outV: '22', state: 'normal' },
+              s3: { inP: '2', inV: '22', outP: '3', outV: '77', state: 'lookup' }
+            }
+          },
+          {
+            badge: '5',
+            heading: `الخطوة (5): وصول الإطار [${label} | 77] إلى Destination B وفك التغليف`,
+            body: `يستقبل <span class="font-en font-bold">Destination B</span> الإطار برقم <span class="font-en font-bold text-emerald-700">VCI = 77</span>، فيتأكد فوراً أنه قادم من <span class="font-en font-bold">Source A</span> ويفك تغليف البيانات بنجاح!`,
+            status: `Status: ${label} Delivered Successfully to B!`,
+            pkt: { visible: true, pos: COORDS.HOST_B, payload: label, header: 'Delivered ✓', color: 'bg-emerald-700' },
+            activeNode: 'box-node-b',
+            activeLink: null,
+            vciA: 'VCI = 14',
+            vciB: 'VCI = 77',
+            tables: {
+              s1: { inP: '1', inV: '14', outP: '3', outV: '66', state: 'normal' },
+              s2: { inP: '1', inV: '66', outP: '2', outV: '22', state: 'normal' },
+              s3: { inP: '2', inV: '22', outP: '3', outV: '77', state: 'normal' }
+            }
+          }
+        ];
+      }
+
+      // Phase 3: Teardown (Connection termination ONLY — keeps tables intact without deleting rows)
+      return [
+        {
+          badge: '0',
+          heading: 'البداية: مرحلة إنهاء الاتصال (Teardown Phase)',
+          body: 'بعد انتهاء إرسال جميع البيانات، يبدأ المصدر <span class="font-en font-bold">Source A</span> بإنهاء الجلسة. اضغط <b>"الخطوة التالية"</b> لمشاهدة مرور إطار إنهاء الاتصال عبر الشبكة.',
+          status: 'Status: Virtual Circuit Active (Ready to Teardown)',
+          pkt: { visible: false, pos: COORDS.HOST_A, payload: 'Teardown', header: '14', color: 'bg-rose-600' },
+          activeNode: 'box-node-a',
+          activeLink: null,
+          vciA: 'VCI = 14',
+          vciB: 'VCI = 77',
+          tables: {
+            s1: { inP: '1', inV: '14', outP: '3', outV: '66', state: 'normal' },
+            s2: { inP: '1', inV: '66', outP: '2', outV: '22', state: 'normal' },
+            s3: { inP: '2', inV: '22', outP: '3', outV: '77', state: 'normal' }
+          }
+        },
+        {
+          badge: '1',
+          heading: 'الخطوة (1): إرسال إطار إنهاء الاتصال (Teardown Frame) من Source A',
+          body: 'يرسل <span class="font-en font-bold">Source A</span> إطار إنهاء الاتصال (<span class="font-en font-semibold text-rose-700">Teardown Frame</span>) إلى <span class="font-en font-bold">Switch 1</span> لإبلاغه بانتهاء نقل البيانات.',
+          status: 'Status: Sending Teardown Frame...',
+          pkt: { visible: true, pos: COORDS.LINK_A_1, payload: 'Teardown', header: 'VCI: 14', color: 'bg-rose-600' },
+          activeNode: 'box-node-a',
+          activeLink: 'seg-a-s1',
+          vciA: 'VCI = 14',
+          vciB: 'VCI = 77',
+          tables: {
+            s1: { inP: '1', inV: '14', outP: '3', outV: '66', state: 'normal' },
+            s2: { inP: '1', inV: '66', outP: '2', outV: '22', state: 'normal' },
+            s3: { inP: '2', inV: '22', outP: '3', outV: '77', state: 'normal' }
+          }
+        },
+        {
+          badge: '2',
+          heading: 'الخطوة (2): تمرير إطار الإنهاء عبر Switch 1 ثم Switch 2',
+          body: 'يمرر <span class="font-en font-bold">Switch 1</span> إطار إنهاء الاتصال إلى <span class="font-en font-bold">Switch 2</span>، ومنه إلى <span class="font-en font-bold">Switch 3</span> على طول مسار الدائرة الافتراضية.',
+          status: 'Status: Propagating Teardown Across WAN Switches',
+          pkt: { visible: true, pos: COORDS.LINK_2_3, payload: 'Teardown', header: 'VCI: 22', color: 'bg-rose-600' },
+          activeNode: 'box-node-s2',
+          activeLink: 'seg-s2-s3',
+          vciA: 'Closed',
+          vciB: 'VCI = 77',
+          tables: {
+            s1: { inP: '1', inV: '14', outP: '3', outV: '66', state: 'closed' },
+            s2: { inP: '1', inV: '66', outP: '2', outV: '22', state: 'closed' },
+            s3: { inP: '2', inV: '22', outP: '3', outV: '77', state: 'normal' }
+          }
+        },
+        {
+          badge: '3',
+          heading: 'الخطوة (3): وصول إطار الإنهاء إلى Destination B وإنهاء الاتصال',
+          body: 'يستقبل <span class="font-en font-bold">Destination B</span> إطار الإنهاء، وبذلك يتم <b>إنهاء الاتصال (<span class="font-en text-rose-700">Connection Terminated</span>)</b> وإغلاق الدائرة الافتراضية بين <span class="font-en font-bold">A</span> و <span class="font-en font-bold">B</span> بنجاح.',
+          status: 'Status: Connection Terminated (Session Closed)',
+          pkt: { visible: true, pos: COORDS.HOST_B, payload: 'Connection', header: 'Terminated', color: 'bg-rose-700' },
+          activeNode: 'box-node-b',
+          activeLink: 'seg-s3-b',
+          vciA: 'Closed',
+          vciB: 'Closed',
+          tables: {
+            s1: { inP: '1', inV: '14', outP: '3', outV: '66', state: 'closed' },
+            s2: { inP: '1', inV: '66', outP: '2', outV: '22', state: 'closed' },
+            s3: { inP: '2', inV: '22', outP: '3', outV: '77', state: 'closed' }
+          }
+        }
+      ];
+    }
+
+    // Render individual switch table
+    function renderTable(swKey, row) {
+      const tbody = document.getElementById(`body-table-${swKey}`);
+      const badge = document.getElementById(`badge-table-${swKey}`);
+      const card = document.getElementById(`card-table-${swKey}`);
+
+      card.classList.remove('border-blue-500', 'ring-4', 'ring-blue-500/15', 'border-rose-300');
+      card.classList.add('border-slate-300');
+
+      if (!row) {
+        badge.textContent = 'Empty';
+        badge.className = 'px-1.5 py-0.5 rounded text-[10px] bg-slate-700 text-slate-300';
+        tbody.innerHTML = `<tr class="text-slate-400"><td colspan="4" class="py-2 italic">—</td></tr>`;
+        return;
+      }
+
+      if (row.state === 'pop3' || row.state === 'pop4' || row.state === 'lookup') {
+        card.classList.remove('border-slate-300');
+        card.classList.add('border-blue-500', 'ring-4', 'ring-blue-500/15');
+      } else if (row.state === 'closed') {
+        card.classList.remove('border-slate-300');
+        card.classList.add('border-rose-300');
+      }
+
+      if (row.state === 'closed') {
+        badge.textContent = 'Closed';
+        badge.className = 'px-1.5 py-0.5 rounded text-[10px] bg-rose-600 text-white font-bold';
+      } else if (row.outV === '?') {
+        badge.textContent = '3/4 Filled';
+        badge.className = 'px-1.5 py-0.5 rounded text-[10px] bg-amber-400 text-slate-900 font-bold';
+      } else {
+        badge.textContent = 'Active';
+        badge.className = 'px-1.5 py-0.5 rounded text-[10px] bg-emerald-500 text-white font-bold';
+      }
+
+      const anim3 = row.state === 'pop3' ? 'cell-animate' : '';
+      const anim4 = row.state === 'pop4' ? 'cell-animate' : '';
+      const rowBg = row.state === 'lookup' ? 'bg-amber-50' :
+                    row.state === 'closed' ? 'bg-rose-50/40 text-slate-500' : '';
+
+      const outVCell = row.outV === '?'
+        ? `<td class="py-2 font-extrabold bg-amber-100 text-amber-800">?</td>`
+        : `<td class="py-2 font-extrabold text-emerald-700 bg-emerald-50/70"><span class="${anim4}">${row.outV}</span></td>`;
+
+      tbody.innerHTML = `
+        <tr class="font-bold text-slate-800 ${rowBg}">
+          <td class="py-2 border-r border-slate-200 bg-blue-50/40"><span class="${anim3}">${row.inP}</span></td>
+          <td class="py-2 border-r border-slate-300 text-blue-700 bg-blue-50/40"><span class="${anim3}">${row.inV}</span></td>
+          <td class="py-2 border-r border-slate-200"><span class="${anim3}">${row.outP}</span></td>
+          ${outVCell}
+        </tr>
+      `;
+    }
+
+    // Master UI Render Function
+    function renderUI() {
+      const steps = getStepsForPhase(currentPhase);
+      if (currentStep < 0) currentStep = 0;
+      if (currentStep >= steps.length) currentStep = steps.length - 1;
+
+      const step = steps[currentStep];
+      const theme = PHASE_THEMES[currentPhase];
+      const isFinalStep = currentStep === steps.length - 1;
+
+      // 1. Highlight active phase tab
+      document.querySelectorAll('.phase-tab').forEach(btn => {
+        btn.classList.remove('border-blue-600', 'bg-white', 'text-slate-900', 'shadow-sm');
+        btn.classList.add('border-transparent', 'bg-transparent', 'text-slate-600', 'hover:bg-white/70');
+      });
+      const activeTab = document.getElementById(`tab-${currentPhase}`);
+      if (activeTab) {
+        activeTab.classList.remove('border-transparent', 'bg-transparent', 'text-slate-600', 'hover:bg-white/70');
+        activeTab.classList.add('border-blue-600', 'bg-white', 'text-slate-900', 'shadow-sm');
+      }
+
+      // 2. Style Action Banner & Vibrant Next Button
+      const banner = document.getElementById('action-banner');
+      banner.className = `rounded-2xl border-2 p-4 sm:p-5 transition-colors shadow-sm ${theme.bannerBg}`;
+
+      const badgeCircle = document.getElementById('step-badge-circle');
+      badgeCircle.textContent = step.badge;
+      badgeCircle.className = `w-11 h-11 rounded-xl text-white font-en font-extrabold text-base flex items-center justify-center shrink-0 shadow-sm ${theme.circleBg}`;
+
+      const phasePill = document.getElementById('phase-pill');
+      phasePill.textContent = theme.pillText;
+      phasePill.className = `px-2.5 py-0.5 rounded-full text-xs font-en font-bold ${theme.pillBg}`;
+
+      document.getElementById('step-counter-text').textContent =
+        currentStep === 0 ? `البداية (0 من ${steps.length - 1})` : `الخطوة ${currentStep} من ${steps.length - 1}`;
+      document.getElementById('step-heading').textContent = step.heading;
+      document.getElementById('step-body').innerHTML = step.body;
+
+      const btnNext = document.getElementById('btn-next-step');
+      btnNext.className = `flex-1 sm:flex-initial px-6 py-3.5 rounded-xl text-white font-extrabold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg transition transform active:scale-95 cursor-pointer ${theme.btnBg}`;
+      document.getElementById('btn-next-label').textContent = isFinalStep ? theme.nextPhaseBtnText : 'الخطوة التالية';
+
+      // Show "Send Another Frame" button at end of Data Transfer phase
+      const btnExtra = document.getElementById('btn-extra-frame');
+      if (currentPhase === 'data' && isFinalStep) {
+        btnExtra.classList.remove('hidden');
+        btnExtra.textContent = `إرسال إطار بيانات آخر (Data #${frameIndex + 1})`;
+      } else {
+        btnExtra.classList.add('hidden');
+      }
+
+      // 3. Connection Status Pill
+      const statusPill = document.getElementById('connection-status-pill');
+      statusPill.textContent = step.status;
+      if (currentPhase === 'teardown' && isFinalStep) {
+        statusPill.className = 'font-en font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-800';
+      } else if (currentPhase === 'data' || (currentPhase === 'setup_ack' && isFinalStep)) {
+        statusPill.className = 'font-en font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800';
+      } else {
+        statusPill.className = 'font-en font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700';
+      }
+
+      // 4. Moving Packet Capsule
+      const capsule = document.getElementById('packet-capsule');
+      capsule.style.left = `${step.pkt.pos.x}px`;
+      capsule.style.top = `${step.pkt.pos.y}px`;
+      capsule.style.opacity = step.pkt.visible ? '1' : '0';
+      document.getElementById('pkt-payload').textContent = step.pkt.payload;
+      const pktHeader = document.getElementById('pkt-header');
+      pktHeader.textContent = step.pkt.header;
+      pktHeader.className = `px-2.5 py-1 text-white ${step.pkt.color}`;
+
+      // 5. Highlight Active Node & Link
+      ['box-node-a', 'box-node-s1', 'box-node-s2', 'box-node-s3', 'box-node-b'].forEach(id => {
+        document.getElementById(id).classList.remove('node-highlight');
+      });
+      if (step.activeNode) {
+        document.getElementById(step.activeNode).classList.add('node-highlight');
+      }
+
+      ['seg-a-s1', 'seg-s1-s2', 'seg-s2-s3', 'seg-s3-b'].forEach(id => {
+        const seg = document.getElementById(id);
+        if (id === step.activeLink) {
+          seg.setAttribute('stroke', currentPhase === 'teardown' ? '#e11d48' : '#2563eb');
+          seg.setAttribute('stroke-width', '5.5');
+        } else {
+          seg.setAttribute('stroke', '#94a3b8');
+          seg.setAttribute('stroke-width', '4');
+        }
+      });
+
+      // 6. Host VCI Badges
+      const badgeA = document.getElementById('host-vci-a');
+      badgeA.textContent = step.vciA;
+      badgeA.className = step.vciA === 'VCI: —'
+        ? 'mb-1.5 px-2.5 py-0.5 rounded-full font-en text-[11px] font-extrabold bg-slate-200 text-slate-600'
+        : step.vciA === 'Closed'
+        ? 'mb-1.5 px-2.5 py-0.5 rounded-full font-en text-[11px] font-extrabold bg-rose-600 text-white shadow-sm'
+        : 'mb-1.5 px-2.5 py-0.5 rounded-full font-en text-[11px] font-extrabold bg-blue-600 text-white shadow-sm';
+
+      const badgeB = document.getElementById('host-vci-b');
+      badgeB.textContent = step.vciB;
+      badgeB.className = step.vciB === 'VCI: —'
+        ? 'mb-1.5 px-2.5 py-0.5 rounded-full font-en text-[11px] font-extrabold bg-slate-200 text-slate-600'
+        : step.vciB === 'Closed'
+        ? 'mb-1.5 px-2.5 py-0.5 rounded-full font-en text-[11px] font-extrabold bg-rose-600 text-white shadow-sm'
+        : 'mb-1.5 px-2.5 py-0.5 rounded-full font-en text-[11px] font-extrabold bg-emerald-600 text-white shadow-sm';
+
+      // 7. Render Switch Tables
+      renderTable('s1', step.tables.s1);
+      renderTable('s2', step.tables.s2);
+      renderTable('s3', step.tables.s3);
+    }
+
+    function selectPhase(phase) {
+      currentPhase = phase;
+      currentStep = 0;
+      if (phase === 'data') frameIndex = 1;
+      renderUI();
+    }
+
+    function nextStep() {
+      const steps = getStepsForPhase(currentPhase);
+      if (currentStep < steps.length - 1) {
+        currentStep++;
+        renderUI();
+      } else {
+        const nextPhaseKey = PHASE_THEMES[currentPhase].nextPhase;
+        selectPhase(nextPhaseKey);
+      }
+    }
+
+    function resetCurrentPhase() {
+      currentStep = 0;
+      renderUI();
+    }
+
+    function sendAnotherFrame() {
+      frameIndex++;
+      currentStep = 1;
+      renderUI();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderUI();
+    });
+  </script>
+</body>
+</html>
